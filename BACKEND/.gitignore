@@ -1,0 +1,42 @@
+# ----------------------------------------------------------------------
+# BAĞIMLILIKLAR & DERLEME ÇIKTILARI (ÖNEMLİ!)
+# ----------------------------------------------------------------------
+/node_modules
+/vendor
+/public/build
+/public/hot
+/public/storage
+/bootstrap/cache/*.php
+/.phpunit.cache
+
+# ----------------------------------------------------------------------
+# ÇEVRE BİLGİLERİ (GÜVENLİK)
+# ----------------------------------------------------------------------
+.env
+.env.backup
+.env.production
+.env.*.local
+auth.json
+
+# ----------------------------------------------------------------------
+# SUNUCU VE LOG DOSYALARI
+# ----------------------------------------------------------------------
+/storage/*.key
+/storage/*
+!/storage/.gitignore  # Git'in storage'ı izlemesi için boş bir gitignore bırakırız
+
+npm-debug.log
+yarn-error.log
+*.log
+
+# ----------------------------------------------------------------------
+# YEREL GELİŞTİRME & IDE AYARLARI
+# ----------------------------------------------------------------------
+# Laravel Homestead
+Homestead.json
+Homestead.yaml
+
+# IDE ve Editör Ayarları
+/.fleet
+/.idea
+/.vscode
