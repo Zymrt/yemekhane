@@ -1,44 +1,99 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-xl"> <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Yeni Hesap Oluştur</h2>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-green-50 to-orange-100 p-6">
+    <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-xl border border-gray-200">
       
-      <form @submit.prevent="handleRegister">
-        
+      <!-- Logo ve Başlık -->
+      <div class="flex flex-col items-center mb-8">
+        <img 
+          src="assets/logo.jpg" 
+          alt="Mezitli Belediyesi" 
+          class="w-20 h-20 object-contain mb-4"
+        />
+        <h2 class="text-3xl font-bold text-gray-800 text-center">Yeni Hesap Oluştur</h2>
+        <p class="text-gray-500 text-sm mt-1">Mezitli Belediyesi yemekhane sistemine kayıt ol</p>
+      </div>
+
+      <!-- Form -->
+      <form @submit.prevent="handleRegister" class="space-y-5">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="mb-4">
-            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Ad:</label>
-            <input type="text" id="name" v-model="name" required :class="inputClass" placeholder="Adınız">
+          <div>
+            <label for="name" class="block text-sm font-semibold text-gray-700 mb-1">Ad</label>
+            <input 
+              type="text" 
+              id="name" 
+              v-model="name" 
+              required 
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+              placeholder="Adınız"
+            >
           </div>
-          <div class="mb-4">
-            <label for="surname" class="block text-sm font-medium text-gray-700 mb-1">Soyad:</label>
-            <input type="text" id="surname" v-model="surname" required :class="inputClass" placeholder="Soyadınız">
+          <div>
+            <label for="surname" class="block text-sm font-semibold text-gray-700 mb-1">Soyad</label>
+            <input 
+              type="text" 
+              id="surname" 
+              v-model="surname" 
+              required 
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+              placeholder="Soyadınız"
+            >
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="mb-4">
-            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Telefon Numarası:</label>
-            <input type="tel" id="phone" v-model="phone" required :class="inputClass" placeholder="5XX XXX XX XX">
+          <div>
+            <label for="phone" class="block text-sm font-semibold text-gray-700 mb-1">Telefon Numarası</label>
+            <input 
+              type="tel" 
+              id="phone" 
+              v-model="phone" 
+              required 
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+              placeholder="5XX XXX XX XX"
+            >
           </div>
-          <div class="mb-4">
-            <label for="unit" class="block text-sm font-medium text-gray-700 mb-1">Bağlı Olduğu Birim:</label>
-            <input type="text" id="unit" v-model="unit" required :class="inputClass" placeholder="Müdürlük adı">
+          <div>
+            <label for="unit" class="block text-sm font-semibold text-gray-700 mb-1">Bağlı Olduğu Birim</label>
+            <input 
+              type="text" 
+              id="unit" 
+              v-model="unit" 
+              required 
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
+              placeholder="Müdürlük adı"
+            >
           </div>
         </div>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="mb-4">
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Şifre:</label>
-            <input type="password" id="password" v-model="password" required :class="inputClass">
+          <div>
+            <label for="password" class="block text-sm font-semibold text-gray-700 mb-1">Şifre</label>
+            <input 
+              type="password" 
+              id="password" 
+              v-model="password" 
+              required 
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+              placeholder="••••••••"
+            >
           </div>
-          <div class="mb-6">
-            <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Şifre Tekrarı:</label>
-            <input type="password" id="password_confirmation" v-model="password_confirmation" required :class="inputClass">
+          <div>
+            <label for="password_confirmation" class="block text-sm font-semibold text-gray-700 mb-1">Şifre Tekrarı</label>
+            <input 
+              type="password" 
+              id="password_confirmation" 
+              v-model="password_confirmation" 
+              required 
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+              placeholder="••••••••"
+            >
           </div>
         </div>
-        
-        <div class="mb-6">
-          <label for="proof_document" class="block text-sm font-medium text-gray-700 mb-1">Kurum Kimlik/Belgesi (PDF, JPG/PNG, maks 2MB):</label>
+
+        <div>
+          <label for="proof_document" class="block text-sm font-semibold text-gray-700 mb-1">
+            Kurum Kimlik / Belgesi (PDF, JPG/PNG, maks. 2MB)
+          </label>
           <input 
             type="file" 
             id="proof_document" 
@@ -49,26 +104,29 @@
           >
         </div>
 
-        <p v-if="error" class="text-red-600 text-sm mb-4">Hata: {{ error }}</p>
-        
+        <p v-if="error" class="text-red-600 text-sm text-center">Hata: {{ error }}</p>
+
+        <!-- Kayıt Butonu -->
         <button 
           type="submit" 
           :disabled="loading"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+          class="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 via-blue-500 to-green-500 text-white font-semibold shadow-md hover:scale-105 transition-all duration-300 disabled:opacity-60"
         >
           {{ loading ? 'Kayıt Olunuyor...' : 'Kayıt Ol' }}
         </button>
       </form>
 
-      <p class="mt-6 text-center text-sm text-gray-600">
-        Zaten hesabın var mı? 
-        <NuxtLink to="/login" class="font-medium text-green-600 hover:text-green-500">
+      <!-- Alt Kısım -->
+      <p class="mt-8 text-center text-sm text-gray-600">
+        Zaten hesabın var mı?
+        <NuxtLink to="/login" class="font-semibold text-blue-600 hover:text-blue-500 transition">
           Giriş Yap
         </NuxtLink>
       </p>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref } from 'vue';

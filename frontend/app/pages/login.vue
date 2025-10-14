@@ -1,48 +1,62 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-400 via-emerald-500 to-orange-400 p-6">
+    
+    <!-- Cam Efektli Login Kutusu -->
+    <div class="backdrop-blur-xl bg-white/30 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/20">
       
-      <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Kullanıcı Girişi</h2>
+      <!-- Logo ve Başlık -->
+      <div class="flex flex-col items-center mb-8">
+        <div class="w-20 h-20 bg-white rounded-full shadow-md flex items-center justify-center overflow-hidden">
+          <img 
+            src="assets/logo.jpg" 
+            alt="Logo" 
+            class="object-contain w-16 h-16 transition-transform duration-500 hover:scale-110"
+          />
+        </div>
+        <h2 class="text-3xl font-bold text-white mt-5 drop-shadow-md">Kullanıcı Girişi</h2>
+      </div>
       
-      <form @submit.prevent="handleLogin">
+      <!-- Form -->
+      <form @submit.prevent="handleLogin" class="space-y-5">
         
-        <div class="mb-4">
-          <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Telefon Numarası:</label>
+        <div>
+          <label for="phone" class="block text-sm font-semibold text-white mb-1">Telefon Numarası</label>
           <input 
             type="tel" 
             id="phone" 
             v-model="phone" 
             required
-            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            class="w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-yellow-400 outline-none shadow-sm"
             placeholder="5XX XXX XX XX"
           >
         </div>
         
-        <div class="mb-6">
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Şifre:</label>
+        <div>
+          <label for="password" class="block text-sm font-semibold text-white mb-1">Şifre</label>
           <input 
             type="password" 
             id="password" 
             v-model="password" 
             required
-            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            class="w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-yellow-400 outline-none shadow-sm"
+            placeholder="••••••••"
           >
         </div>
         
-        <p v-if="error" class="text-red-600 text-sm mb-4">Hata: {{ error }}</p>
+        <p v-if="error" class="text-red-200 text-sm text-center mt-2">⚠️ {{ error }}</p>
         
         <button 
           type="submit" 
           :disabled="loading"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          class="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 via-orange-500 to-orange-600 text-white font-semibold shadow-md hover:scale-105 transition-all duration-300 disabled:opacity-60"
         >
           {{ loading ? 'Giriş Yapılıyor...' : 'Giriş Yap' }}
         </button>
       </form>
       
-      <p class="mt-6 text-center text-sm text-gray-600">
-        Hesabın yok mu? 
-        <NuxtLink to="/register" class="font-medium text-blue-600 hover:text-blue-500">
+      <p class="mt-6 text-center text-sm text-white/90">
+        Hesabın yok mu?
+        <NuxtLink to="/register" class="font-semibold text-orange-200 hover:text-orange-100 transition">
           Kayıt Ol
         </NuxtLink>
       </p>
@@ -50,60 +64,67 @@
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue';
-// import useAuth from '../composables/useAuth'; // CORS sorunu çözülene kadar bu import'u devre dışı bırakıyoruz.
 
-const phone = ref(''); // E-posta yerine telefon numarası
+<script setup>
+import { ref, onMounted } from 'vue';
+// Yeni yardımcı fonksiyonumuzu import ediyoruz
+import { checkAuthGuard } from '../utils/auth-guard.js'; 
+import useAuth from '../composables/useAuth'; 
+
+// Hata veren definePageMeta satırı SİLİNDİ!
+
+const phone = ref('');
 const password = ref('');
 const loading = ref(false);
 const error = ref(null);
 
-// const { isLoggedIn } = useAuth(); 
+// useAuth'dan sadece setAuthData fonksiyonunu alıyoruz
+const { setAuthData } = useAuth(); 
 
-// *** API ENDPOINT'İ (Register rotanız /register olduğu için, Login rotasının da /login olduğunu varsayıyoruz) ***
+// *** API ENDPOINT'İ ***
 const LOGIN_API_URL = 'http://127.0.0.1:8000/api/login'; 
 
 const handleLogin = async () => {
-  loading.value = true;
-  error.value = null;
+    loading.value = true;
+    error.value = null;
 
-  try {
-    const response = await $fetch(LOGIN_API_URL, {
-      method: 'POST',
-      body: { 
-        phone: phone.value, // Backend'in beklediği alan adı
-        password: password.value 
-      }
-    });
+    try {
+        const response = await $fetch(LOGIN_API_URL, {
+            method: 'POST',
+            body: { 
+                phone: phone.value, 
+                password: password.value 
+            }
+        });
 
-    // 1. Backend'den dönen 'token'ı kaydet.
-    localStorage.setItem('authToken', response.token); 
-    
-    // 2. Kullanıcıyı ana sayfaya yönlendir.
-    await navigateTo('/'); 
+        setAuthData(response.token, response.user);
+        
+        // Kullanıcıyı menü sayfasına yönlendir.
+        await navigateTo('/menu'); 
 
-  } catch (err) {
-    // Backend'den gelen ValidationException hatalarını yakala
-    const apiErrors = err.data?.errors;
-    if (apiErrors) {
-        // Hata mesajını göster ('Telefon veya şifre hatalı' veya 'Hesabınız henüz onaylanmamış')
-        // Laravel'de genellikle ilk hatayı alırız.
-        error.value = Object.values(apiErrors).flat()[0]; 
-    } else {
-        // Diğer genel hataları veya Fetch hatasını göster
-        error.value = 'Giriş sırasında bir hata oluştu.';
+    } catch (err) {
+        const apiErrors = err.data?.errors;
+        if (apiErrors) {
+            error.value = Object.values(apiErrors).flat()[0]; 
+        } else {
+            error.value = 'Giriş sırasında bir hata oluştu.';
+        }
+        
+        console.error('Giriş Hatası:', err);
+        
+        if (process.client) {
+             localStorage.removeItem('authToken');
+             localStorage.removeItem('isAdmin'); 
+        }
+        
+    } finally {
+        loading.value = false;
     }
-    
-    console.error('Giriş Hatası:', err);
-    
-    // Hata durumunda token'ı temizle (Gereksiz token kalmasını önler)
-    if (process.client) {
-      localStorage.removeItem('authToken');
-    }
-    
-  } finally {
-    loading.value = false;
-  }
 };
+
+// KRİTİK DEĞİŞİKLİK: Middleware mantığını buraya taşıdık.
+onMounted(() => {
+    // Sayfa yüklendiğinde, giriş yapılmışsa /menu'ye yönlendirir.
+    checkAuthGuard();
+});
 </script>

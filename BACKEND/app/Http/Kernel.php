@@ -39,10 +39,9 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            // SPA kullanıyorsan uncomment et:
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Http\Middleware\HandleCors::class,
-            'throttle:api', // Burada alias kullanıyoruz
+            'throttle:api', 
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -65,5 +64,7 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        // YENİ EKLEME: Admin rol kontrolü middleware'inin takma adı
+        'admin' => \App\Http\Middleware\AdminMiddleware::class, 
     ];
 }

@@ -34,15 +34,22 @@ class LoginController extends Controller
 
         $token = JWTAuth::fromUser($user);
 
+        // KRİTİK DEĞİŞİKLİK: 'is_admin' alanını da response'a ekliyoruz
         return response()->json([
-            'user' => $user->only('id','name','surname','phone','unit','balance'),
+            'user' => $user->only('id','name','surname','phone','unit','balance', 'is_admin'),
             'token' => $token
         ]);
     }
 
     public function logout(Request $request)
     {
-        JWTAuth::invalidate(JWTAuth::getToken());
-        return response()->json(['message'=>'Çıkış yapıldı.']);
+        try {
+            JWTAuth::invalidate(JWTAuth::getToken());
+        } catch (\Exception $e) {
+            // Token zaten geçersizse bile başarılı sayarız
+            return response()->json(['message' => 'Çıkış yapıldı.'], 200);
+        }
+        
+        return response()->json(['message' => 'Çıkış yapıldı.']);
     }
 }
