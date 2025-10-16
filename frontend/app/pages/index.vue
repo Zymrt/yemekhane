@@ -18,7 +18,7 @@
     <div class="flex space-x-6">
       <NuxtLink
         to="/login"
-        class="bg-white text-orange-600 font-semibold py-3 px-8 rounded-2xl shadow-lg transition-all duration-300 hover:bg-green-100 hover:scale-105"
+        class="bg-white text-orange-600 font-semibold py-3 px-8 rounded-2xl shadow-lg transition-all duration-300 hover:bg-orange-100 hover:scale-105"
       >
         Giriş Yap
       </NuxtLink>

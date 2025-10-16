@@ -32,11 +32,16 @@ class LoginController extends Controller
             ]);
         }
 
-        $token = JWTAuth::fromUser($user);
+        // --- DEĞİŞİKLİK 1: TOKEN'IN İÇİNE ROL BİLGİSİNİ EKLİYORUZ ---
+        $customClaims = ['role' => $user->role];
+        $token = JWTAuth::claims($customClaims)->fromUser($user);
+        
+        // Önceki satır: $token = JWTAuth::fromUser($user);
 
-        // KRİTİK DEĞİŞİKLİK: 'is_admin' alanını da response'a ekliyoruz
+        // --- DEĞİŞİKLİK 2: YANITTAN 'is_admin' KALDIRIP 'role' EKLİYORUZ ---
         return response()->json([
-            'user' => $user->only('id','name','surname','phone','unit','balance', 'is_admin'),
+            // 'only' metoduna 'role' ekledik ve 'is_admin'i kaldırdık
+            'user' => $user->only('_id','name','surname','phone','unit','balance', 'role'), 
             'token' => $token
         ]);
     }

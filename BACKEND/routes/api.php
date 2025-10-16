@@ -2,7 +2,8 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\MenuController; 
-use App\Http\Controllers\Auth\UserController; // YENİ: UserController'ı dahil ediyoruz
+use App\Http\Controllers\Auth\UserController;
+use App\Http\Controllers\AdminController; 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -20,20 +21,29 @@ Route::middleware('jwt.auth')->group(function () {
     // 1. Çıkış Yapma
     Route::post('logout', [LoginController::class, 'logout']);
 
-    // 2. KULLANICI PROFİLİ ÇEKME (UserController kullanılarak detaylı veri çekilir)
-    // Frontend URL: http://127.0.0.1:8000/api/user/profile
+    // 2. KULLANICI PROFİLİ ÇEKME
     Route::get('/user/profile', [UserController::class, 'getProfile']); 
 
-    // Eski 'user' örneğini isterseniz kaldırabiliriz:
-    // Route::get('user', function(Request $request){ return auth()->user(); });
-
     // 3. MENÜ GÖRÜNTÜLEME
-    // Frontend URL: http://127.0.0.1:8000/api/menu/today
     Route::get('/menu/today', [MenuController::class, 'getTodayMenu']);
 
-    // 4. ADMIN MENÜ EKLEME (AdminMiddleware ile korumalı)
+    // 4. ADMIN İŞLEMLERİ (AdminMiddleware ile korumalı)
     Route::middleware('admin')->group(function () {
-        // Frontend URL: http://127.0.0.1:8000/api/admin/menu/add
+        
+        // MENÜ EKLEME (Mevcut)
         Route::post('/admin/menu/add', [MenuController::class, 'addMenu']); 
+        
+        // YENİ: ONAY BEKLEYEN KULLANICILARI LİSTELEME
+        Route::get('/admin/pending-users', [AdminController::class, 'getPendingUsers']);
+        
+        // YENİ: BELGE İNDİRME
+        Route::get('/admin/download-document/{userId}', [AdminController::class, 'downloadDocument']);
+        
+        // YENİ EKLENEN ROTLAR: ONAYLAMA ve REDDETME
+        // Kullanıcıyı Onaylama
+        Route::post('/admin/approve-user/{userId}', [AdminController::class, 'approveUser']);
+        
+        // Kullanıcıyı Reddetme/Silme
+        Route::delete('/admin/reject-user/{userId}', [AdminController::class, 'rejectUser']);
     });
 });

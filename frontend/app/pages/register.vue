@@ -1,40 +1,41 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-green-50 to-orange-100 p-6">
-    <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-xl border border-gray-200">
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-400 via-emerald-500 to-orange-400 p-6">
+    
+    <div class="backdrop-blur-xl bg-white/30 p-8 rounded-2xl shadow-2xl w-full max-w-xl border border-white/20">
       
-      <!-- Logo ve Başlık -->
       <div class="flex flex-col items-center mb-8">
-        <img 
-          src="assets/logo.jpg" 
-          alt="Mezitli Belediyesi" 
-          class="w-20 h-20 object-contain mb-4"
-        />
-        <h2 class="text-3xl font-bold text-gray-800 text-center">Yeni Hesap Oluştur</h2>
-        <p class="text-gray-500 text-sm mt-1">Mezitli Belediyesi yemekhane sistemine kayıt ol</p>
+        <div class="w-20 h-20 bg-white rounded-full shadow-md flex items-center justify-center overflow-hidden">
+          <img 
+            src="assets/logo.jpg" 
+            alt="Mezitli Belediyesi" 
+            class="object-contain w-16 h-16 transition-transform duration-500 hover:scale-110"
+          />
+        </div>
+        <h2 class="text-3xl font-bold text-white mt-5 drop-shadow-md text-center">Yeni Hesap Oluştur</h2>
+        <p class="text-white/80 text-sm mt-1 drop-shadow-sm">Mezitli Belediyesi yemekhane sistemine kayıt ol</p>
       </div>
 
-      <!-- Form -->
       <form @submit.prevent="handleRegister" class="space-y-5">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label for="name" class="block text-sm font-semibold text-gray-700 mb-1">Ad</label>
+            <label for="name" class="block text-sm font-semibold text-white mb-1">Ad</label>
             <input 
               type="text" 
               id="name" 
               v-model="name" 
               required 
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+              class="w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-yellow-400 outline-none shadow-sm"
               placeholder="Adınız"
             >
           </div>
           <div>
-            <label for="surname" class="block text-sm font-semibold text-gray-700 mb-1">Soyad</label>
+            <label for="surname" class="block text-sm font-semibold text-white mb-1">Soyad</label>
             <input 
               type="text" 
               id="surname" 
               v-model="surname" 
               required 
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+              class="w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-yellow-400 outline-none shadow-sm"
               placeholder="Soyadınız"
             >
           </div>
@@ -42,24 +43,24 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label for="phone" class="block text-sm font-semibold text-gray-700 mb-1">Telefon Numarası</label>
+            <label for="phone" class="block text-sm font-semibold text-white mb-1">Telefon Numarası</label>
             <input 
               type="tel" 
               id="phone" 
               v-model="phone" 
               required 
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+              class="w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-yellow-400 outline-none shadow-sm"
               placeholder="5XX XXX XX XX"
             >
           </div>
           <div>
-            <label for="unit" class="block text-sm font-semibold text-gray-700 mb-1">Bağlı Olduğu Birim</label>
+            <label for="unit" class="block text-sm font-semibold text-white mb-1">Bağlı Olduğu Birim</label>
             <input 
               type="text" 
               id="unit" 
               v-model="unit" 
               required 
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
+              class="w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-yellow-400 outline-none shadow-sm"
               placeholder="Müdürlük adı"
             >
           </div>
@@ -67,59 +68,57 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label for="password" class="block text-sm font-semibold text-gray-700 mb-1">Şifre</label>
+            <label for="password" class="block text-sm font-semibold text-white mb-1">Şifre</label>
             <input 
               type="password" 
               id="password" 
               v-model="password" 
               required 
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+              class="w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-yellow-400 outline-none shadow-sm"
               placeholder="••••••••"
             >
           </div>
           <div>
-            <label for="password_confirmation" class="block text-sm font-semibold text-gray-700 mb-1">Şifre Tekrarı</label>
+            <label for="password_confirmation" class="block text-sm font-semibold text-white mb-1">Şifre Tekrarı</label>
             <input 
               type="password" 
               id="password_confirmation" 
               v-model="password_confirmation" 
               required 
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+              class="w-full px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-yellow-400 outline-none shadow-sm"
               placeholder="••••••••"
             >
           </div>
         </div>
 
         <div>
-          <label for="proof_document" class="block text-sm font-semibold text-gray-700 mb-1">
-            Kurum Kimlik / Belgesi (PDF, JPG/PNG, maks. 2MB)
+          <label for="proof_document" class="block text-sm font-semibold text-white mb-1">
+            Kurum Kimlik / Belgesi (PDF, JPG/PNG)
           </label>
           <input 
             type="file" 
             id="proof_document" 
             @change="handleFileUpload" 
             required 
-            class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
+            class="block w-full text-sm text-white border border-white/30 rounded-lg cursor-pointer bg-white/20 focus:outline-none file:bg-orange-500 file:border-none file:text-white file:px-4 file:py-2 file:mr-4 hover:file:bg-orange-600 transition-colors"
             accept=".pdf,.jpg,.jpeg,.png"
           >
         </div>
 
-        <p v-if="error" class="text-red-600 text-sm text-center">Hata: {{ error }}</p>
+        <p v-if="error" class="text-red-200 text-sm text-center pt-2">⚠️ Hata: {{ error }}</p>
 
-        <!-- Kayıt Butonu -->
         <button 
           type="submit" 
           :disabled="loading"
-          class="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 via-blue-500 to-green-500 text-white font-semibold shadow-md hover:scale-105 transition-all duration-300 disabled:opacity-60"
+          class="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 via-orange-500 to-orange-600 text-white font-semibold shadow-md hover:scale-105 transition-all duration-300 disabled:opacity-60"
         >
           {{ loading ? 'Kayıt Olunuyor...' : 'Kayıt Ol' }}
         </button>
       </form>
 
-      <!-- Alt Kısım -->
-      <p class="mt-8 text-center text-sm text-gray-600">
+      <p class="mt-8 text-center text-sm text-white/90">
         Zaten hesabın var mı?
-        <NuxtLink to="/login" class="font-semibold text-blue-600 hover:text-blue-500 transition">
+        <NuxtLink to="/login" class="font-semibold text-orange-200 hover:text-orange-100 transition">
           Giriş Yap
         </NuxtLink>
       </p>
