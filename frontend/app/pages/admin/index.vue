@@ -21,13 +21,27 @@
         </div>
       </NuxtLink>
 
-      <div class="relative backdrop-blur-lg bg-white/5 p-8 rounded-2xl shadow-xl border border-white/10 filter grayscale opacity-60 cursor-not-allowed">
-         <div class="flex items-center justify-center w-16 h-16 bg-gray-500/10 rounded-full mb-5">
-          <ClipboardDocumentListIcon class="w-8 h-8 text-gray-400" />
+      <NuxtLink 
+        to="/admin/add-menu" 
+        class="group relative backdrop-blur-lg bg-white/10 p-8 rounded-2xl shadow-xl border border-white/10 transition-all duration-300 hover:bg-white/20 hover:-translate-y-2"
+      >
+        <div class="flex items-center justify-center w-16 h-16 bg-teal-300/10 rounded-full mb-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-teal-400/20">
+          <ClipboardDocumentListIcon class="w-8 h-8 text-teal-300" />
         </div>
         <h2 class="text-2xl font-bold text-white mb-2">Menü Yönetimi</h2>
-        <p class="text-gray-300">(Yakında) Günlük yemek menüsünü düzenle.</p>
-      </div>
+        <p class="text-gray-300">Günlük yemek menüsünü düzenle.</p>
+      </NuxtLink>
+
+      <NuxtLink 
+  to="/admin/menus" 
+  class="group relative backdrop-blur-lg bg-white/10 p-8 rounded-2xl shadow-xl border border-white/10 transition-all duration-300 hover:bg-white/20 hover:-translate-y-2"
+>
+  <div class="flex items-center justify-center w-16 h-16 bg-emerald-300/10 rounded-full mb-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-emerald-400/20">
+    <ClipboardDocumentListIcon class="w-8 h-8 text-emerald-300" />
+  </div>
+  <h2 class="text-2xl font-bold text-white mb-2">Menüleri Görüntüle</h2>
+  <p class="text-gray-300">Tüm geçmiş menüleri görüntüle ve gerekirse sil.</p>
+</NuxtLink>
 
       <div class="relative backdrop-blur-lg bg-white/5 p-8 rounded-2xl shadow-xl border border-white/10 filter grayscale opacity-60 cursor-not-allowed">
          <div class="flex items-center justify-center w-16 h-16 bg-gray-500/10 rounded-full mb-5">

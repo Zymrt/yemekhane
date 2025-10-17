@@ -34,7 +34,10 @@ Route::middleware('jwt.auth')->group(function () {
         
         // MENÜ İŞLEMLERİ
         Route::post('/menu/add', [MenuController::class, 'addMenu']);
-        
+        Route::get('/menu/all', [MenuController::class, 'getAllMenus']); // 👈 yeni
+        Route::delete('/menu/{id}', [MenuController::class, 'deleteMenu']); // 👈 yeni
+        Route::put('/menu/{id}', [MenuController::class, 'updateMenu']);
+
         // KULLANICI YÖNETİMİ
         // Onay bekleyen kullanıcıları listeleme
         Route::get('/users/pending', [AdminController::class, 'getPendingUsers']);
