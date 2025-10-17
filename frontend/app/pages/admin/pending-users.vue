@@ -84,8 +84,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router'; 
-import useAuth from '~/composables/useAuth'; 
-import { checkAuthGuard } from '~/utils/auth-guard.js'; 
+import useAuth from '../composables/useAuth'; 
+import { checkAuthGuard } from '../utils/auth-guard.js'; 
 
 // --- Veri ve Durum Yönetimi ---
 const router = useRouter();

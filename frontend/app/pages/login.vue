@@ -64,67 +64,53 @@
   </div>
 </template>
 
-
 <script setup>
-import { ref, onMounted } from 'vue';
-// Yeni yardımcı fonksiyonumuzu import ediyoruz
-import { checkAuthGuard } from '../utils/auth-guard.js'; 
-import useAuth from '../composables/useAuth'; 
+import { ref } from 'vue';
+import useAuth from '../composables/useAuth';
+import useAuthGuard from '../composables/useAuthGuard';
 
-// Hata veren definePageMeta satırı SİLİNDİ!
+// Sayfa koruması: Giriş yapmış kullanıcı bu sayfayı göremez.
+const { protectGuestPage } = useAuthGuard();
+protectGuestPage();
+
+// Gerekli state ve fonksiyonları yeni useAuth'dan alıyoruz
+const { login } = useAuth();
+// useRouter'a artık ihtiyacımız yok, sildik!
 
 const phone = ref('');
 const password = ref('');
 const loading = ref(false);
 const error = ref(null);
 
-// useAuth'dan sadece setAuthData fonksiyonunu alıyoruz
-const { setAuthData } = useAuth(); 
-
-// *** API ENDPOINT'İ ***
-const LOGIN_API_URL = 'http://127.0.0.1:8000/api/login'; 
+const LOGIN_API_URL = 'http://127.0.0.1:8000/api/login';
 
 const handleLogin = async () => {
-    loading.value = true;
-    error.value = null;
+  loading.value = true;
+  error.value = null;
 
-    try {
-        const response = await $fetch(LOGIN_API_URL, {
-            method: 'POST',
-            body: { 
-                phone: phone.value, 
-                password: password.value 
-            }
-        });
+  try {
+    const response = await $fetch(LOGIN_API_URL, {
+      method: 'POST',
+      body: { phone: phone.value, password: password.value }
+    });
 
-        setAuthData(response.token, response.user);
-        
-        // Kullanıcıyı menü sayfasına yönlendir.
-        await navigateTo('/menu'); 
-
-    } catch (err) {
-        const apiErrors = err.data?.errors;
-        if (apiErrors) {
-            error.value = Object.values(apiErrors).flat()[0]; 
-        } else {
-            error.value = 'Giriş sırasında bir hata oluştu.';
-        }
-        
-        console.error('Giriş Hatası:', err);
-        
-        if (process.client) {
-             localStorage.removeItem('authToken');
-             localStorage.removeItem('isAdmin'); 
-        }
-        
-    } finally {
-        loading.value = false;
+    // Merkezi state'imizi güncelliyoruz
+    login({ user: response.user, token: response.token });
+    
+    // AKILLI YÖNLENDİRME (navigateTo ile güncellendi)
+    if (response.user.role === 'admin') {
+      // router.push yerine navigateTo kullanıyoruz
+      await navigateTo('/admin');
+    } else {
+      // router.push yerine navigateTo kullanıyoruz
+      await navigateTo('/menu');
     }
-};
 
-// KRİTİK DEĞİŞİKLİK: Middleware mantığını buraya taşıdık.
-onMounted(() => {
-    // Sayfa yüklendiğinde, giriş yapılmışsa /menu'ye yönlendirir.
-    checkAuthGuard();
-});
-</script>
+  } catch (err) {
+    error.value = err.data?.errors?.phone?.[0] || 'Giriş sırasında bir hata oluştu.';
+    console.error('Giriş Hatası:', err);
+  } finally {
+    loading.value = false;
+  }
+};
+</script> 

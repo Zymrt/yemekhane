@@ -62,54 +62,44 @@
 </template>
 
 <script setup>
-
 import { ref, onMounted } from 'vue';
-import useAuth from '../composables/useAuth'; // useAuth composable'ı eklendi
+import useAuth from '../composables/useAuth'; // Yeni, basitleştirilmiş useAuth'u çağırıyoruz
+import useAuthGuard from '../composables/useAuthGuard';
 
-// --- API ve Durum Yönetimi ---
+// Sayfayı sadece giriş yapmış kullanıcıların görebilmesi için koruma altına alıyoruz.
+const { protectUserPage } = useAuthGuard();
+protectUserPage();
+
+// --- Durum Yönetimi ---
 const loading = ref(true);
 const error = ref(null);
 const menu = ref(null);
 
-// useAuth'dan gerekli state ve fonksiyonları çekiyoruz
-const { user, isAdmin, logout } = useAuth(); 
-
-// API Endpoint'leri
-const MENU_API_URL = 'http://127.0.0.1:8000/api/menu/today'; 
-const API_BASE_URL = 'http://127.0.0.1:8000'; 
-
+// Gerekli state ve fonksiyonları yeni useAuth'dan alıyoruz
+const { user, logout, token } = useAuth();
 
 // --- Veri Çekme Fonksiyonu ---
 const fetchMenu = async () => {
   loading.value = true;
   error.value = null;
-  
-  const token = process.client ? localStorage.getItem('authToken') : null;
 
-  if (!token) {
+  // Token'ı artık localStorage'dan değil, merkezi useAuth'dan alıyoruz.
+  if (!token.value) {
     error.value = 'Oturum bilgisi bulunamadı.';
-    await logout(); // useAuth'daki logout'u çağırır
+    await logout();
     return;
   }
 
   try {
-    const response = await $fetch(MENU_API_URL, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      baseURL: API_BASE_URL,
+    const response = await $fetch('http://127.0.0.1:8000/api/menu/today', {
+      headers: { 'Authorization': `Bearer ${token.value}` }
     });
-    
-    menu.value = response; 
-
+    menu.value = response;
   } catch (err) {
     console.error('Menü Yükleme Hatası:', err);
-    if (err.statusCode === 401 || err.statusCode === 403) {
-      error.value = 'Oturum süresi doldu veya yetkiniz yok.';
+    error.value = 'Menü yüklenirken bir hata oluştu veya yetkiniz yok.';
+    if (err.statusCode === 401) {
       await logout();
-    } else {
-      error.value = 'Menü yüklenirken bir hata oluştu.';
     }
   } finally {
     loading.value = false;
@@ -118,14 +108,11 @@ const fetchMenu = async () => {
 
 // --- Çıkış Fonksiyonu ---
 const handleLogout = async () => {
-    await logout(); // useAuth'daki global logout fonksiyonunu çağırır
+  await logout(); // useAuth'daki global logout fonksiyonunu çağırır
 };
 
 // --- Sayfa Yüklendiğinde Menüyü Çekme ---
 onMounted(() => {
-    fetchMenu();
+  fetchMenu();
 });
-
-// --- Middleware (Güvenlik) ---
-
 </script>
