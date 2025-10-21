@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-10">
     <div class="p-8 backdrop-blur-lg bg-white/10 rounded-2xl shadow-xl border border-white/10">
-      <h1 class="text-4xl font-bold text-white">Hoş Geldin, <span class="text-cyan-300">{{ user?.name }}!</span></h1>
+      <h1 class="text-4xl font-bold text-white">Hoş Geldin, <span class="text-orange-500">{{ user?.name }}!</span></h1>
       <p class="text-gray-300 mt-2">Yönetim paneline hoş geldin. Buradan tüm işlemleri kolayca yönetebilirsin.</p>
     </div>
 

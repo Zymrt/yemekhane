@@ -1,77 +1,170 @@
 <template>
-  <div class="p-6 sm:p-10 bg-gray-50 min-h-screen">
-    <h1 class="text-3xl font-bold text-gray-800 mb-8">Kullanıcı Onay Paneli</h1>
-    
-    <div v-if="pending" class="text-center text-gray-500">
-      <p>Kullanıcılar yükleniyor...</p>
-    </div>
-    
-    <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-      <strong class="font-bold">Hata!</strong>
-      <span class="block sm:inline"> Veriler çekilirken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.</span>
-    </div>
-    
-    <div v-else-if="users && users.length === 0" class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
-      <p>Onay bekleyen yeni bir kullanıcı bulunmuyor. Harika iş! ✅</p>
-    </div>
+  <div class="space-y-8">
+    <header>
+      <h1 class="text-3xl font-bold text-gray-800">Onay Bekleyen Kullanıcılar</h1>
+      <NuxtLink to="/admin" class="text-sm text-indigo-600 hover:underline mt-1 inline-block">
+        &larr; Admin Paneline Geri Dön
+      </NuxtLink>
+    </header>
 
-    <div v-else class="overflow-x-auto bg-white rounded-lg shadow">
-      <table class="min-w-full">
-        <thead class="bg-gray-100 border-b">
-          <tr>
-            <th class="py-3 px-5 text-left text-sm font-semibold text-gray-600">Ad Soyad</th>
-            <th class="py-3 px-5 text-left text-sm font-semibold text-gray-600">Telefon</th>
-            <th class="py-3 px-5 text-left text-sm font-semibold text-gray-600">Birim</th>
-            <th class="py-3 px-5 text-center text-sm font-semibold text-gray-600">İşlemler</th>
-          </tr>
-        </thead>
-        <tbody class="text-gray-700">
-          <tr v-for="user in users" :key="user._id" class="hover:bg-gray-50">
-            <td class="py-3 px-5">{{ user.name }} {{ user.surname }}</td>
-            <td class="py-3 px-5">{{ user.phone }}</td>
-            <td class="py-3 px-5">{{ user.unit }}</td>
-            <td class="py-3 px-5 text-center">
-              <div class="flex items-center justify-center gap-2">
-                <button @click="viewDocument(user._id)" :disabled="isProcessing" class="text-blue-500 hover:text-blue-700 disabled:opacity-50">Belgeyi Gör</button>
-                <button @click="approveUser(user._id)" :disabled="isProcessing" class="bg-green-500 text-white px-3 py-1 rounded-full text-sm hover:bg-green-600 transition-colors disabled:opacity-50">Onayla</button>
-                <button @click="rejectUser(user._id)" :disabled="isProcessing" class="bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 transition-colors disabled:opacity-50">Reddet</button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div v-if="loading" class="text-gray-500">Liste yükleniyor...</div>
+    <div v-else-if="error" class="text-red-600">{{ error }}</div>
+    <div v-else-if="users.length === 0" class="text-gray-500">Onay bekleyen kullanıcı yok.</div>
+
+    <div v-else class="grid md:grid-cols-2 gap-6">
+      <div
+        v-for="u in users"
+        :key="u.id"
+        class="bg-white border rounded-xl p-5 shadow-sm"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="text-lg font-semibold text-gray-800">
+              {{ u.name || u.fullname || 'İsimsiz' }}
+            </div>
+            <div class="text-gray-500 text-sm">{{ u.email }}</div>
+          </div>
+
+          <span class="px-2 py-1 text-xs rounded bg-amber-100 text-amber-700 border border-amber-200">
+            Onay Bekliyor
+          </span>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-3">
+          <button
+            class="px-3 py-2 rounded-lg border text-blue-600 border-blue-300 hover:bg-blue-50"
+            @click="viewDocument(u)"
+          >
+            Belgeyi Gör
+          </button>
+
+          <button
+            class="px-3 py-2 rounded-lg border text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+            :disabled="actionLoadingId === u.id"
+            @click="approveUser(u.id)"
+          >
+            {{ actionLoadingId === u.id && actionType === 'approve' ? 'Onaylanıyor...' : 'Onayla' }}
+          </button>
+
+          <button
+            class="px-3 py-2 rounded-lg border text-red-700 border-red-300 hover:bg-red-50"
+            :disabled="actionLoadingId === u.id"
+            @click="rejectUser(u.id)"
+          >
+            {{ actionLoadingId === u.id && actionType === 'reject' ? 'Reddediliyor...' : 'Reddet' }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-definePageMeta({
-  layout: 'admin'
-});
-import { ref } from 'vue';
-import useAuth from '../composables/useAuth';
-import useAuthGuard from '../composables/useAuthGuard';
+import { ref, onMounted } from 'vue'
+import useAuth from '../composables/useAuth'
+import useAuthGuard from '../composables/useAuthGuard'
 
-// Sayfa koruması: Sadece adminler görebilir.
-const { protectAdminPage } = useAuthGuard();
-protectAdminPage();
+definePageMeta({ layout: 'admin' })
+const { protectAdminPage } = useAuthGuard()
+protectAdminPage()
 
-// Gerekli state ve fonksiyonları yeni useAuth'dan alıyoruz
-const { token } = useAuth();
+const { token, logout } = useAuth()
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api/admin';
+// API BASE
+const API_BASE = 'http://127.0.0.1:8000/api/admin'
 
-// Onay bekleyen kullanıcıları çekme
-const { data: users, pending, error, refresh } = await useFetch(`${API_BASE_URL}/users/pending`, {
-  headers: {
-    'Authorization': `Bearer ${token.value}`, // .value kullanmayı unutmuyoruz!
-    'Accept': 'application/json',
+const users = ref([])
+const loading = ref(true)
+const error = ref(null)
+const actionLoadingId = ref(null)
+const actionType = ref(null)
+
+const fetchPending = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    users.value = await $fetch(`${API_BASE}/users/pending`, {
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+  } catch (err) {
+    if (err?.statusCode === 401) {
+      alert('Oturum süresi doldu.')
+      await logout()
+      return
+    }
+    error.value = 'Liste alınamadı.'
+    console.error(err)
+  } finally {
+    loading.value = false
   }
-});
+}
 
-const isProcessing = ref(false);
+onMounted(fetchPending)
 
-// ... approveUser, rejectUser, viewDocument fonksiyonların aynı kalabilir,
-// sadece token'ı kullanırken token.value olduğundan emin olmalısın.
-// Örneğin: headers: { 'Authorization': `Bearer ${token.value}` }
+// --- FONKSİYONLAR ---
+
+const viewDocument = async (u) => {
+  try {
+    const res = await fetch(`${API_BASE}/users/${u.id}/document`, {
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+
+    if (!res.ok) throw new Error('Belge yüklenemedi.')
+
+    const blob = await res.blob()
+    const fileURL = URL.createObjectURL(blob)
+    window.open(fileURL, '_blank')
+  } catch (err) {
+    console.error(err)
+    alert('Belge görüntülenemedi.')
+  }
+}
+
+const approveUser = async (id) => {
+  actionLoadingId.value = id
+  actionType.value = 'approve'
+  try {
+    await $fetch(`${API_BASE}/users/${id}/approve`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+    users.value = users.value.filter(u => u.id !== id)
+  } catch (err) {
+    if (err?.statusCode === 401) {
+      alert('Oturum süresi doldu.')
+      await logout()
+      return
+    }
+    alert('Onaylama başarısız.')
+    console.error(err)
+  } finally {
+    actionLoadingId.value = null
+    actionType.value = null
+  }
+}
+
+const rejectUser = async (id) => {
+  if (!confirm('Bu kullanıcıyı reddetmek istediğine emin misin?')) return
+
+  actionLoadingId.value = id
+  actionType.value = 'reject'
+  try {
+    await $fetch(`${API_BASE}/users/${id}/reject`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+    users.value = users.value.filter(u => u.id !== id)
+  } catch (err) {
+    if (err?.statusCode === 401) {
+      alert('Oturum süresi doldu.')
+      await logout()
+      return
+    }
+    alert('Reddetme başarısız.')
+    console.error(err)
+  } finally {
+    actionLoadingId.value = null
+    actionType.value = null
+  }
+}
 </script>

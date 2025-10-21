@@ -3,50 +3,111 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Menu;
+use Illuminate\Support\Carbon;
+use MongoDB\BSON\ObjectId;
 
 class MenuController extends Controller
 {
     /**
-     * Normal kullanıcılar ve Adminler için Günlük Menü bilgisini döndürür.
-      */ 
-    public function getTodayMenu(Request $request)
+     * Günün menüsünü getirir (tarih bazlı)
+     */
+    public function getTodayMenu()
     {
-        // Gerçek bir uygulamada bu veriler veritabanından çekilir.
-        $todayMenu = [
-            'date' => now()->format('Y-m-d'),
-            'dayName' => now()->translatedFormat('l'),
-            'items' => [
-                ['name' => 'Kremalı Mantar Çorbası', 'description' => 'Mantar ve krema ile hazırlanmış.'],
-                ['name' => 'İskender Kebap', 'description' => 'Özel tereyağlı sosuyla.'],
-                ['name' => 'Pirinç Pilavı', 'description' => 'Tereyağlı, tane tane.'],
-                ['name' => 'Sütlaç', 'description' => 'Fırında üzeri kızarmış.'],
-            ],
-        ];
+        $today = Carbon::today()->startOfDay();
+        $menu = Menu::where('date', $today)->first();
 
-        return response()->json($todayMenu, 200);
+        if (!$menu) {
+            return response()->json(['message' => 'Bugün için menü bulunamadı.'], 404);
+        }
+
+        return response()->json($menu);
     }
-    
+
     /**
-     * YENİ METOT: Sadece Adminlerin menü kaydetmesini sağlar.
-     * Bu metoda erişim, rotada 'admin' middleware'i ile korunacaktır.
+     * Yeni menü ekler veya aynı gün varsa günceller
      */
     public function addMenu(Request $request)
     {
-        // 1. Doğrulama (Frontend'den gelecek verinin yapısını belirtir)
-        $request->validate([
-            'menu_date' => 'required|date_format:Y-m-d|unique:menus,menu_date', // Aynı gün için sadece 1 menü
+        $validated = $request->validate([
+            'date' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string|max:255',
-            'items.*.description' => 'nullable|string',
+            'items.*.description' => 'nullable|string|max:255',
         ]);
 
-        // 2. Veritabanına kaydetme mantığı (Burada Menu Modelinizi kullanacaksınız)
-        // Örn: Menu::create($request->all());
+        Menu::updateOrCreate(
+            ['date' => Carbon::parse($validated['date'])->startOfDay()],
+            ['items' => $validated['items']]
+        );
 
-        return response()->json([
-            'message' => "{$request->menu_date} tarihi için menü başarıyla kaydedildi.", 
-            'data' => $request->all()
-        ], 201);
+        return response()->json(['message' => 'Menü başarıyla kaydedildi veya güncellendi.']);
+    }
+
+    /**
+     * Tüm menüleri getir (admin için)
+     */
+    public function getAllMenus()
+    {
+        $menus = Menu::orderBy('date', 'desc')->get();
+        return response()->json($menus);
+    }
+
+    /**
+     * Menü güncelle
+     */
+    public function updateMenu(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'items' => 'required|array|min:1',
+            'items.*.name' => 'required|string|max:255',
+            'items.*.description' => 'nullable|string|max:255',
+        ]);
+
+        $objectId = $this->cleanObjectId($id);
+        $menu = Menu::where('_id', $objectId)->first();
+
+        if (!$menu) {
+            return response()->json(['message' => 'Menü bulunamadı.'], 404);
+        }
+
+        $menu->date  = Carbon::parse($validated['date'])->startOfDay();
+        $menu->items = $validated['items'];
+        $menu->save();
+
+        return response()->json(['message' => 'Menü başarıyla güncellendi.']);
+    }
+
+    /**
+     * Menü sil
+     */
+    public function deleteMenu($id)
+    {
+        $objectId = $this->cleanObjectId($id);
+        $menu = Menu::where('_id', $objectId)->first();
+
+        if (!$menu) {
+            return response()->json(['message' => 'Menü bulunamadı.'], 404);
+        }
+
+        $menu->delete();
+        return response()->json(['message' => 'Menü başarıyla silindi.']);
+    }
+
+    /**
+     * ObjectId temizleyici
+     */
+    private function cleanObjectId($id)
+    {
+        if (preg_match('/^[a-f\d]{24}$/i', $id)) {
+            return new ObjectId($id);
+        }
+
+        if (preg_match("/ObjectId\('([a-f\d]{24})'\)/i", $id, $matches)) {
+            return new ObjectId($matches[1]);
+        }
+
+        throw new \Exception("Geçersiz ObjectId formatı: $id");
     }
 }
