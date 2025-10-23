@@ -32,29 +32,39 @@ class LoginController extends Controller
             ]);
         }
 
-        // --- DEĞİŞİKLİK 1: TOKEN'IN İÇİNE ROL BİLGİSİNİ EKLİYORUZ ---
         $customClaims = ['role' => $user->role];
         $token = JWTAuth::claims($customClaims)->fromUser($user);
-        
-        // Önceki satır: $token = JWTAuth::fromUser($user);
 
-        // --- DEĞİŞİKLİK 2: YANITTAN 'is_admin' KALDIRIP 'role' EKLİYORUZ ---
+        // ✅ Local için cookie ayarları
+        $cookie = cookie(
+            'token',
+            $token,
+            60 * 24,    // 1 gün
+            '/',
+            '127.0.0.1', // local domain
+            false,       // secure = false (HTTP)
+            true,        // HttpOnly
+            false,
+            'Lax'        // Chrome kabul eder
+        );
+
         return response()->json([
-            // 'only' metoduna 'role' ekledik ve 'is_admin'i kaldırdık
-            'user' => $user->only('_id','name','surname','phone','unit','balance', 'role'), 
-            'token' => $token
-        ]);
+            'message' => 'Giriş başarılı.',
+            'user' => $user->only('_id','name','surname','phone','unit','balance','role'),
+            'debug_token' => $token // geçici debug
+        ])->withCookie($cookie);
     }
 
     public function logout(Request $request)
     {
         try {
             JWTAuth::invalidate(JWTAuth::getToken());
-        } catch (\Exception $e) {
-            // Token zaten geçersizse bile başarılı sayarız
-            return response()->json(['message' => 'Çıkış yapıldı.'], 200);
-        }
-        
-        return response()->json(['message' => 'Çıkış yapıldı.']);
+        } catch (\Exception $e) {}
+
+        $forgetCookie = cookie()->forget('token');
+
+        return response()->json([
+            'message' => 'Çıkış yapıldı.'
+        ])->withCookie($forgetCookie);
     }
-} 
+}

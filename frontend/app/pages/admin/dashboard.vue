@@ -46,18 +46,24 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-// Sekmeler tanımı
+// Statik importlar (dinamik import kaldırıldı)
+import UserReports from '../components/reports/UserReports.vue'
+import MenuStats from '../components/reports/MenuStats.vue'
+import SystemLogs from '../components/reports/SystemLogs.vue'
+import ActivityChart from '../components/reports/ActivityChart.vue'
+
+// Sekmeler
 const tabs = [
-  { id: 'users', name: 'Kullanıcı Raporları', component: 'UserReports' },
-  { id: 'menu', name: 'Menü İstatistikleri', component: 'MenuStats' },
-  { id: 'logs', name: 'Sistem Logları', component: 'SystemLogs' },
-  { id: 'activity', name: 'Aktivite Grafiği', component: 'ActivityChart' }
+  { id: 'users', name: 'Kullanıcı Raporları', component: UserReports },
+  { id: 'menu', name: 'Menü İstatistikleri', component: MenuStats },
+  { id: 'logs', name: 'Sistem Logları', component: SystemLogs },
+  { id: 'activity', name: 'Aktivite Grafiği', component: ActivityChart }
 ]
 
 const activeTab = ref('users')
 const currentComponent = computed(() => {
   const tab = tabs.find(t => t.id === activeTab.value)
-  return tab ? defineAsyncComponent(() => import(`../components/reports/${tab.component}.vue`)) : null
+  return tab ? tab.component : null
 })
 </script>
 

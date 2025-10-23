@@ -70,7 +70,16 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import useAuth from '../composables/useAuth'
 
-const { logout, token } = useAuth()
+const { logout, user, isAdmin } = useAuth()
+
+// 👮 Admin sayfası güvenlik kontrolü
+if (!user.value) {
+  console.warn('👤 Oturum yok, girişe yönlendiriliyor...')
+  await navigateTo('/login')
+} else if (!isAdmin.value) {
+  console.warn('🚫 Yetkisiz erişim, kullanıcı menüsüne yönlendiriliyor...')
+  await navigateTo('/menu')
+}
 
 // 🕒 SAAT
 const currentTime = ref('')
@@ -85,14 +94,10 @@ const updateTime = () => {
 setInterval(updateTime, 1000)
 updateTime()
 
-// ⏳ TOKEN GERİ SAYIM
-const TOKEN_TTL_MINUTES = 90
-const tokenStartTime = ref(localStorage.getItem('tokenStartTime'))
-
-if (!tokenStartTime.value && process.client && token.value) {
-  localStorage.setItem('tokenStartTime', Date.now())
-  tokenStartTime.value = Date.now()
-}
+// ⏳ OTURUM SÜRESİ (manuel sayaç – debug amaçlı)
+const SESSION_TTL_MINUTES = 90
+const sessionStart = ref(Number(localStorage.getItem('sessionStart')) || Date.now())
+if (process.client) localStorage.setItem('sessionStart', sessionStart.value)
 
 const remainingTime = ref(0)
 const formattedRemaining = computed(() => {
@@ -103,9 +108,8 @@ const formattedRemaining = computed(() => {
 })
 
 const updateRemaining = () => {
-  if (!tokenStartTime.value) return
-  const elapsed = Date.now() - tokenStartTime.value
-  const ttlMs = TOKEN_TTL_MINUTES * 60 * 1000
+  const elapsed = Date.now() - sessionStart.value
+  const ttlMs = SESSION_TTL_MINUTES * 60 * 1000
   remainingTime.value = Math.max(ttlMs - elapsed, 0)
 
   if (remainingTime.value <= 0) {
@@ -121,14 +125,3 @@ onMounted(() => {
 })
 onBeforeUnmount(() => clearInterval(timer))
 </script>
-
-<style scoped>
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-.animate-gradient {
-  animation: gradientShift 15s ease infinite;
-}
-</style>

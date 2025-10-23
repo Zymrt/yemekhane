@@ -2,35 +2,42 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Auth\UserController;
+use App\Http\Controllers\Auth\RefreshController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\MenuController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Bu yapı cookie tabanlı JWT doğrulama için optimize edilmiştir.
+| Frontend'de her istek "credentials: 'include'" ile gönderilmelidir.
+|
+*/
 
 // --------------------------------------------------------
-// AÇIK ROTLAR (AUTH GEREKTİRMEZ)
+// 🟢 AÇIK ROTLAR (AUTH GEREKTİRMEZ)
 // --------------------------------------------------------
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
 
-// ✅ TOKEN YENİLEME (jwt.auth OLMAYACAK!)
-Route::post('/refresh', function (Request $request) {
-    try {
-        $newToken = JWTAuth::parseToken()->refresh();
-        return response()->json(['token' => $newToken]);
-    } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-        return response()->json(['error' => 'Geçersiz token.'], 401);
-    } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
-        return response()->json(['error' => 'Token süresi dolmuş.'], 401);
-    } catch (Exception $e) {
-        return response()->json(['error' => 'Token yenilenemedi.'], 401);
-    }
+// ✅ TOKEN YENİLEME (Cookie tabanlı)
+Route::post('/refresh', [RefreshController::class, 'refresh']);
+
+// 🔍 Cookie test (isteğe bağlı, dev/test için)
+Route::get('/cookie-test', function (Request $request) {
+    return response()->json([
+        'token_cookie' => $request->cookie('token') ? '✅ Cookie alındı' : '❌ Cookie yok',
+        'raw' => $request->cookie('token')
+    ]);
 });
 
 // --------------------------------------------------------
-// KORUMALI ROTLAR (JWT GEREKTİRİR)
+// 🔒 KORUMALI ROTLAR (JWT GEREKTİRİR)
 // --------------------------------------------------------
 Route::middleware(['jwt.auth'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout']);
@@ -38,7 +45,7 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/menu/today', [MenuController::class, 'getTodayMenu']);
 
     // --------------------------------------------------------
-    // ADMİN ROTLARI
+    // 🧑‍💼 ADMİN ROTLARI
     // --------------------------------------------------------
     Route::prefix('admin')->middleware('admin')->group(function () {
         // 🧾 MENÜ İŞLEMLERİ
@@ -55,12 +62,12 @@ Route::middleware(['jwt.auth'])->group(function () {
 
         // 📊 DASHBOARD RAPORLAR
         Route::get('/dashboard', [AdminController::class, 'getDashboardStats']);
-    });
-});
 
-// --------------------------------------------------------
-// Laravel'in kendi user route'u (isteğe bağlı)
-// --------------------------------------------------------
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+        Route::get('/cookie-test', function (\Illuminate\Http\Request $request) {
+    return response()->json([
+        'token_cookie' => $request->cookie('token') ? '✅ Cookie alındı' : '❌ Cookie yok',
+        'raw' => $request->cookie('token'),
+    ]);
+});
+    });
 });

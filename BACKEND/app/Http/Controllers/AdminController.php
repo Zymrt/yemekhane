@@ -11,9 +11,6 @@ use Illuminate\Support\Carbon;
 
 class AdminController extends Controller
 {
-    /**
-     * Onay bekleyen kullanıcıları listeler (status: 'pending').
-     */
     public function getPendingUsers()
     {
         $pendingUsers = User::where('status', 'pending')
@@ -23,9 +20,6 @@ class AdminController extends Controller
         return response()->json($pendingUsers, Response::HTTP_OK);
     }
 
-    /**
-     * Kullanıcının yüklediği belgeyi indirir.
-     */
     public function downloadDocument($userId)
     {
         $user = User::findOrFail($userId);
@@ -44,9 +38,6 @@ class AdminController extends Controller
         return response()->json(['message' => 'Belge dosyası sunucuda bulunamadı.'], Response::HTTP_NOT_FOUND);
     }
 
-    /**
-     * Belirtilen kullanıcıyı onaylar.
-     */
     public function approveUser($userId)
     {
         $user = User::findOrFail($userId);
@@ -61,9 +52,6 @@ class AdminController extends Controller
         return response()->json(['message' => 'Kullanıcı başarıyla onaylandı.'], Response::HTTP_OK);
     }
 
-    /**
-     * Belirtilen kullanıcıyı reddeder (status: 'rejected' yapar).
-     */
     public function rejectUser($userId)
     {
         $user = User::findOrFail($userId);
@@ -78,75 +66,72 @@ class AdminController extends Controller
     }
 
     /**
-     * 📊 Dashboard istatistiklerini getirir.
+     * 📊 Yönetim Dashboard istatistikleri
      */
     public function getDashboardStats(Request $request)
     {
-        $totalMenus = Menu::count();
-        $todayMenu = Menu::where('date', Carbon::today()->startOfDay())->first();
-
-        $byMonth = Menu::raw(function ($collection) {
-            return $collection->aggregate([
-                [
-                    '$group' => [
-                        '_id'   => ['year' => ['$year' => '$date'], 'month' => ['$month' => '$date']],
-                        'count' => ['$sum' => 1],
-                    ]
-                ],
-                ['$sort' => ['_id.year' => 1, '_id.month' => 1]]
-            ]);
-        });
-
-        $start7 = Carbon::today()->subDays(6)->startOfDay();
-        $last7 = Menu::where('date', '>=', $start7)->get(['date']);
-        $last7Map = [];
-        for ($i = 0; $i < 7; $i++) {
-            $d = $start7->copy()->addDays($i)->format('Y-m-d');
-            $last7Map[$d] = 0;
-        }
-        foreach ($last7 as $m) {
-            $key = Carbon::parse($m->date)->format('Y-m-d');
-            if (isset($last7Map[$key])) $last7Map[$key] += 1;
-        }
-
+        // 🧩 Kullanıcı İstatistikleri
         $totalUsers = User::count();
         $pendingUsers = User::where('status', 'pending')->count();
         $approvedUsers = User::where('status', 'approved')->count();
 
-        $since30 = Carbon::today()->subDays(30)->startOfDay();
-        $popularItems = Menu::where('date', '>=', $since30)->get(['items']);
-        $freq = [];
-        foreach ($popularItems as $menu) {
-            foreach (($menu->items ?? []) as $it) {
-                $name = trim($it['name'] ?? '');
-                if ($name === '') continue;
-                $freq[$name] = ($freq[$name] ?? 0) + 1;
+        // 🍽 Menü İstatistikleri
+        $totalMenus = Menu::count();
+        $todayMenu = Menu::whereDate('date', Carbon::today())->first();
+
+        // 📆 Son 7 Günlük Menü Sayısı
+        $startDate = Carbon::today()->subDays(6);
+        $last7Menus = Menu::where('date', '>=', $startDate)->get(['date']);
+        $last7Data = [];
+        for ($i = 0; $i < 7; $i++) {
+            $day = $startDate->copy()->addDays($i)->format('Y-m-d');
+            $last7Data[$day] = 0;
+        }
+        foreach ($last7Menus as $menu) {
+            $key = Carbon::parse($menu->date)->format('Y-m-d');
+            if (isset($last7Data[$key])) {
+                $last7Data[$key]++;
             }
         }
-        arsort($freq);
+
+        // 📈 Aylık Menü Grafiği (yıl-ay bazında)
+        $monthlyData = Menu::selectRaw('YEAR(date) as year, MONTH(date) as month, COUNT(*) as count')
+            ->groupBy('year', 'month')
+            ->orderBy('year')
+            ->orderBy('month')
+            ->get();
+
+        // 🍛 Son 30 Günün En Popüler Menüleri
+        $since30 = Carbon::today()->subDays(30);
+        $menus = Menu::where('date', '>=', $since30)->get(['items']);
+        $itemFrequency = [];
+
+        foreach ($menus as $menu) {
+            foreach ($menu->items ?? [] as $item) {
+                $name = trim($item['name'] ?? '');
+                if ($name === '') continue;
+                $itemFrequency[$name] = ($itemFrequency[$name] ?? 0) + 1;
+            }
+        }
+
+        arsort($itemFrequency);
         $topItems = [];
-        foreach (array_slice($freq, 0, 8, true) as $k => $v) {
-            $topItems[] = ['name' => $k, 'count' => $v];
+        foreach (array_slice($itemFrequency, 0, 8, true) as $name => $count) {
+            $topItems[] = ['name' => $name, 'count' => $count];
         }
 
         return response()->json([
-            'menuStats' => [
-                'total'   => $totalMenus,
-                'today'   => $todayMenu,
-                'byMonth' => array_values(array_map(function ($row) {
-                    return [
-                        'year'  => $row->_id->year ?? $row->_id['year'] ?? null,
-                        'month' => $row->_id->month ?? $row->_id['month'] ?? null,
-                        'count' => $row->count ?? 0
-                    ];
-                }, iterator_to_array($byMonth))),
-                'last7'   => $last7Map,
-                'topItems'=> $topItems,
-            ],
             'userStats' => [
-                'total'    => $totalUsers,
-                'pending'  => $pendingUsers,
+                'total' => $totalUsers,
+                'pending' => $pendingUsers,
                 'approved' => $approvedUsers,
+            ],
+            'menuStats' => [
+                'total' => $totalMenus,
+                'today' => $todayMenu,
+                'last7Days' => $last7Data,
+                'byMonth' => $monthlyData,
+                'topItems' => $topItems,
             ],
         ]);
     }

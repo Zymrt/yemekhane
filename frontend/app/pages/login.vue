@@ -1,10 +1,8 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-400 via-emerald-500 to-orange-400 p-6">
-    
-    <!-- Cam Efektli Login Kutusu -->
     <div class="backdrop-blur-xl bg-white/30 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/20">
       
-      <!-- Logo ve Başlık -->
+      <!-- Logo -->
       <div class="flex flex-col items-center mb-8">
         <div class="w-20 h-20 bg-white rounded-full shadow-md flex items-center justify-center overflow-hidden">
           <img 
@@ -15,10 +13,9 @@
         </div>
         <h2 class="text-3xl font-bold text-white mt-5 drop-shadow-md">Kullanıcı Girişi</h2>
       </div>
-      
+
       <!-- Form -->
       <form @submit.prevent="handleLogin" class="space-y-5">
-        
         <div>
           <label for="phone" class="block text-sm font-semibold text-white mb-1">Telefon Numarası</label>
           <input 
@@ -42,9 +39,9 @@
             placeholder="••••••••"
           >
         </div>
-        
+
         <p v-if="error" class="text-red-200 text-sm text-center mt-2">⚠️ {{ error }}</p>
-        
+
         <button 
           type="submit" 
           :disabled="loading"
@@ -53,7 +50,7 @@
           {{ loading ? 'Giriş Yapılıyor...' : 'Giriş Yap' }}
         </button>
       </form>
-      
+
       <p class="mt-6 text-center text-sm text-white/90">
         Hesabın yok mu?
         <NuxtLink to="/register" class="font-semibold text-orange-200 hover:text-orange-100 transition">
@@ -65,52 +62,39 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import useAuth from '../composables/useAuth';
-import useAuthGuard from '../composables/useAuthGuard';
+import { ref } from 'vue'
+import useAuth from '../composables/useAuth'
 
-// Sayfa koruması: Giriş yapmış kullanıcı bu sayfayı göremez.
-const { protectGuestPage } = useAuthGuard();
-protectGuestPage();
+// 🔥 Guard'ı komple kaldırdık. Login sayfası herkese açık olmalı.
+const { user, login } = useAuth()
 
-// Gerekli state ve fonksiyonları yeni useAuth'dan alıyoruz
-const { login } = useAuth();
-// useRouter'a artık ihtiyacımız yok, sildik!
-
-const phone = ref('');
-const password = ref('');
-const loading = ref(false);
-const error = ref(null);
-
-const LOGIN_API_URL = 'http://127.0.0.1:8000/api/login';
+const phone = ref('')
+const password = ref('')
+const loading = ref(false)
+const error = ref(null)
 
 const handleLogin = async () => {
-  loading.value = true;
-  error.value = null;
+  loading.value = true
+  error.value = null
 
   try {
-    const response = await $fetch(LOGIN_API_URL, {
-      method: 'POST',
-      body: { phone: phone.value, password: password.value }
-    });
+    const ok = await login({ phone: phone.value, password: password.value })
 
-    // Merkezi state'imizi güncelliyoruz
-    login({ user: response.user, token: response.token });
-    
-    // AKILLI YÖNLENDİRME (navigateTo ile güncellendi)
-    if (response.user.role === 'admin') {
-      // router.push yerine navigateTo kullanıyoruz
-      await navigateTo('/admin');
+    if (ok) {
+      // 👇 Rol kontrolüyle yönlendirme
+      if (user.value?.role === 'admin') {
+        await navigateTo('/admin')
+      } else {
+        await navigateTo('/menu')
+      }
     } else {
-      // router.push yerine navigateTo kullanıyoruz
-      await navigateTo('/menu');
+      error.value = 'Telefon veya şifre hatalı.'
     }
-
   } catch (err) {
-    error.value = err.data?.errors?.phone?.[0] || 'Giriş sırasında bir hata oluştu.';
-    console.error('Giriş Hatası:', err);
+    console.error('Login Hatası:', err)
+    error.value = 'Sunucuya bağlanılamadı veya hata oluştu.'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
-</script> 
+}
+</script>

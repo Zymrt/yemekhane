@@ -1,104 +1,103 @@
 export default function useAuth() {
-  const user = useState('user', () => null);
-  const token = useState('token', () => null);
-  const initialized = useState('auth-initialized', () => false);
-  const refreshTimer = useState('refresh-timer', () => null);
-  const lastActivity = useState('last-activity', () => Date.now());
+  const user = useState('user', () => null)
+  const initialized = useState('auth-initialized', () => false)
+  const refreshTimer = useState('refresh-timer', () => null)
+  const lastActivity = useState('last-activity', () => Date.now())
 
-  const REFRESH_INTERVAL = 55 * 60 * 1000; // 55 dk
-  const INACTIVITY_LIMIT = 60 * 60 * 1000; // 1 saat
+  const REFRESH_INTERVAL = 55 * 60 * 1000
+  const INACTIVITY_LIMIT = 60 * 60 * 1000
 
-  // 🧠 Kullanıcı etkileşimi takip
   if (process.client) {
     ['click', 'mousemove', 'keydown', 'scroll'].forEach(evt => {
       window.addEventListener(evt, () => {
-        lastActivity.value = Date.now();
-      });
-    });
+        lastActivity.value = Date.now()
+      })
+    })
   }
 
-  // 🔁 Token yenileme döngüsü
   const startRefreshCycle = () => {
-    if (refreshTimer.value) clearInterval(refreshTimer.value);
+    if (refreshTimer.value) clearInterval(refreshTimer.value)
+
     refreshTimer.value = setInterval(async () => {
-      const inactiveTime = Date.now() - lastActivity.value;
+      const inactiveTime = Date.now() - lastActivity.value
       if (inactiveTime >= INACTIVITY_LIMIT) {
-        console.log('⏳ İnaktif kullanıcı, sessiz çıkış...');
-        await logout(false);
-        return;
+        console.log('⏳ İnaktif kullanıcı, çıkış...')
+        await logout(false)
+        return
       }
+
       try {
-        const response = await $fetch('http://127.0.0.1:8000/api/refresh', {
+        await $fetch('http://127.0.0.1:8000/api/refresh', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token.value}` },
-        });
-        if (response?.token) {
-          token.value = response.token;
-          localStorage.setItem('authToken', response.token);
-          console.log('🔐 Token yenilendi');
-        } else {
-          await logout(false);
-        }
+          credentials: 'include', // 🍪 cookie üzerinden
+        })
+        console.log('✅ Token sessizce yenilendi (cookie)')
       } catch (err) {
-        console.warn('❌ Token yenilenemedi, geçersiz token.');
-        await logout(false);
+        console.warn('❌ Token yenilenemedi, yeniden giriş gerekli.')
+        await new Promise(r => setTimeout(r, 500))
+        await logout(false)
       }
-    }, REFRESH_INTERVAL);
-  };
+    }, REFRESH_INTERVAL)
+  }
 
-  // 🚪 Çıkış (tam temizleme)
   const logout = async (redirect = true) => {
-    user.value = null;
-    token.value = null;
-    localStorage.removeItem('authUser');
-    localStorage.removeItem('authToken');
-    if (refreshTimer.value) clearInterval(refreshTimer.value);
-    refreshTimer.value = null;
-    if (redirect) await navigateTo('/login');
-  };
-
-  // 🔓 Giriş
-  const login = (userData) => {
-    user.value = userData.user;
-    token.value = userData.token;
-    localStorage.setItem('authUser', JSON.stringify(userData.user));
-    localStorage.setItem('authToken', userData.token);
-    startRefreshCycle();
-  };
-
-  // 🚀 Sayfa yüklenince kontrol et
-  if (process.client && !initialized.value) {
-    const storedToken = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('authUser');
-
-    // ✅ Önce temiz token check
-    if (storedToken && storedUser) {
-      (async () => {
-        try {
-          await $fetch('http://127.0.0.1:8000/api/user/profile', {
-            headers: { Authorization: `Bearer ${storedToken}` },
-          });
-          user.value = JSON.parse(storedUser);
-          token.value = storedToken;
-          startRefreshCycle();
-          console.log('✅ Oturum geçerli');
-        } catch (err) {
-          console.warn('🧹 Geçersiz token silindi.');
-          localStorage.removeItem('authUser');
-          localStorage.removeItem('authToken');
-          await logout(false);
-        }
-      })();
-    } else {
-      localStorage.removeItem('authUser');
-      localStorage.removeItem('authToken');
+    try {
+      await $fetch('http://127.0.0.1:8000/api/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch (err) {
+      console.warn('Logout sırasında hata:', err)
     }
 
-    initialized.value = true;
+    user.value = null
+    if (refreshTimer.value) clearInterval(refreshTimer.value)
+    refreshTimer.value = null
+
+    if (redirect) await navigateTo('/login')
   }
 
-  const isLoggedIn = computed(() => !!token.value);
-  const isAdmin = computed(() => user.value?.role === 'admin');
+  const login = async (credentials) => {
+    try {
+      const response = await $fetch('http://127.0.0.1:8000/api/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials), // ✅ JSON string olarak gönder
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      })
 
-  return { user, token, isLoggedIn, isAdmin, login, logout };
+      user.value = response.user
+      startRefreshCycle()
+      console.log('✅ Giriş başarılı (cookie alındı)')
+      return true
+    } catch (error) {
+      console.error('❌ Giriş hatası:', error)
+      return false
+    }
+  }
+
+  if (process.client && !initialized.value) {
+    (async () => {
+      try {
+        const response = await $fetch('http://127.0.0.1:8000/api/user/profile', {
+          credentials: 'include',
+        })
+        user.value = response.user
+        startRefreshCycle()
+        console.log('✅ Oturum aktif (cookie)')
+      } catch {
+        console.warn('🧹 Oturum geçersiz, çıkış...')
+        await logout(false)
+      }
+      initialized.value = true
+    })()
+  }
+
+  const isLoggedIn = computed(() => !!user.value)
+  const isAdmin = computed(() => user.value?.role === 'admin')
+
+  return { user, isLoggedIn, isAdmin, login, logout }
 }
