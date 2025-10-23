@@ -16,7 +16,6 @@ Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
 
 // ✅ TOKEN YENİLEME (jwt.auth OLMAYACAK!)
-// Token süresi dolmadan frontend'ten istek atıldığında yeniler
 Route::post('/refresh', function (Request $request) {
     try {
         $newToken = JWTAuth::parseToken()->refresh();
@@ -42,17 +41,20 @@ Route::middleware(['jwt.auth'])->group(function () {
     // ADMİN ROTLARI
     // --------------------------------------------------------
     Route::prefix('admin')->middleware('admin')->group(function () {
-        // MENÜ İŞLEMLERİ
+        // 🧾 MENÜ İŞLEMLERİ
         Route::post('/menu/add', [MenuController::class, 'addMenu']);
         Route::get('/menu/all', [MenuController::class, 'getAllMenus']);
         Route::delete('/menu/{id}', [MenuController::class, 'deleteMenu']);
         Route::put('/menu/{id}', [MenuController::class, 'updateMenu']);
 
-        // KULLANICI YÖNETİMİ
+        // 👥 KULLANICI YÖNETİMİ
         Route::get('/users/pending', [AdminController::class, 'getPendingUsers']);
         Route::get('/users/{userId}/document', [AdminController::class, 'downloadDocument']);
         Route::post('/users/{userId}/approve', [AdminController::class, 'approveUser']);
         Route::delete('/users/{userId}/reject', [AdminController::class, 'rejectUser']);
+
+        // 📊 DASHBOARD RAPORLAR
+        Route::get('/dashboard', [AdminController::class, 'getDashboardStats']);
     });
 });
 

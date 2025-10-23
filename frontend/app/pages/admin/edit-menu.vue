@@ -167,7 +167,10 @@ const idOf = (doc) => {
 
 onMounted(async () => {
   const menuId = route.query.id
-  if (!menuId) return
+  if (!menuId || menuId === 'undefined') {
+    console.warn('❌ Menü ID eksik veya geçersiz.')
+    return
+  }
   isEdit.value = true
   try {
     const data = await $fetch(`${API_BASE}/menu/all`, {
@@ -176,7 +179,11 @@ onMounted(async () => {
     const current = (data || []).find((m) => idOf(m) === String(menuId))
     if (current) {
       menuDate.value = new Date(current.date).toISOString().slice(0, 10)
-      menuItems.value = current.items || [{ name: '', calorie: '' }]
+      // eski veriler description içeriyorsa fallback:
+      menuItems.value = (current.items || []).map(it => ({
+        name: it.name,
+        calorie: it.calorie ?? it.description ?? ''
+      }))
     } else {
       error.value = 'Menü verisi bulunamadı.'
     }
@@ -216,6 +223,7 @@ const handleSubmit = async () => {
   }
 }
 </script>
+
 
 <style scoped>
 .fade-enter-active,

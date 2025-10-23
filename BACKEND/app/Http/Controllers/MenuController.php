@@ -18,7 +18,7 @@ class MenuController extends Controller
             'date' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string|max:255',
-'items.*.calorie' => 'nullable|numeric|min:0',
+            'items.*.calorie' => 'nullable|numeric|min:0|max:5000',
         ]);
 
         Menu::updateOrCreate(
@@ -43,6 +43,10 @@ class MenuController extends Controller
      */
     public function deleteMenu($id)
     {
+        if (!$id || $id === 'undefined') {
+            return response()->json(['message' => 'Geçersiz menü ID.'], 400);
+        }
+
         $objectId = $this->cleanObjectId($id);
         $menu = Menu::where('_id', $objectId)->first();
 
@@ -59,11 +63,15 @@ class MenuController extends Controller
      */
     public function updateMenu(Request $request, $id)
     {
+        if (!$id || $id === 'undefined') {
+            return response()->json(['message' => 'Geçersiz menü ID.'], 400);
+        }
+
         $validated = $request->validate([
             'date' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string|max:255',
-            'items.*.description' => 'nullable|string|max:255',
+            'items.*.calorie' => 'nullable|numeric|min:0|max:5000',
         ]);
 
         $objectId = $this->cleanObjectId($id);
@@ -73,10 +81,9 @@ class MenuController extends Controller
             return response()->json(['message' => 'Menü bulunamadı.'], 404);
         }
 
-        $menu->update([
-            'date' => Carbon::parse($validated['date'])->startOfDay(),
-            'items' => $validated['items'],
-        ]);
+        $menu->date  = Carbon::parse($validated['date'])->startOfDay();
+        $menu->items = $validated['items'];
+        $menu->save();
 
         return response()->json(['message' => 'Menü başarıyla güncellendi.']);
     }
@@ -97,16 +104,13 @@ class MenuController extends Controller
 
     /**
      * ObjectId temizleme fonksiyonu
-     * Örn: "ObjectId('66fdccba54b8cd2d4b3b2733')" → "66fdccba54b8cd2d4b3b2733"
      */
     private function cleanObjectId($id)
     {
-        // Eğer id zaten 24 karakterlik düz string ise direkt dön
         if (preg_match('/^[a-f\d]{24}$/i', $id)) {
             return new ObjectId($id);
         }
 
-        // Eğer id ObjectId('xxxxx') şeklindeyse regex ile temizle
         if (preg_match("/ObjectId\('([a-f\d]{24})'\)/i", $id, $matches)) {
             return new ObjectId($matches[1]);
         }

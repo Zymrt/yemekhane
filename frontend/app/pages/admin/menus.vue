@@ -53,7 +53,7 @@
         <ul class="list-disc list-inside text-white/90">
   <li v-for="(item, i) in menu.items" :key="i">
     <span class="font-semibold">{{ item.name }}</span>
-    <span v-if="item.description" class="text-white/70"> — {{ item.description }}</span>
+    <span v-if="item.calorie" class="text-white/70"> — {{ item.calorie }} kcal</span>
   </li>
 </ul>
       </div>
