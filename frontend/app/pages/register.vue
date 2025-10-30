@@ -143,9 +143,13 @@ const error = ref(null);
 
 const inputClass = "mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500";
 
-// API ENDPOINT'İNİZ
-const REGISTER_API_URL = 'http://127.0.0.1:8000/api/register'; 
-// NOT: Eğer CORS hatası devam ederse, bu URL'yi 'http://127.0.0.1:8000/api/register' yapmayı deneyin.
+// ----------------------------------------------------
+// ✏️ DEĞİŞİKLİK: API URL'si proxy kullanacak şekilde güncellendi
+// ----------------------------------------------------
+// ESKİ HALİ: const REGISTER_API_URL = 'http://127.0.0.1:8000/api/register'; 
+const REGISTER_API_URL = '/api/register'; // YENİ HALİ (Proxy için)
+// ----------------------------------------------------
+
 
 const handleFileUpload = (event) => {
   // Yüklenen dosyayı al
@@ -184,6 +188,8 @@ const handleRegister = async () => {
     await $fetch(REGISTER_API_URL, {
       method: 'POST',
       body: formData, // JSON yerine FormData gönderiliyor
+      // NOT: 'credentials: include' burada GEREKMEZ, çünkü
+      // bu zaten 'giriş yapılmamış' (public) bir eylemdir.
     });
 
     alert('Kayıt işleminiz başarıyla alındı! Yöneticiniz onayladıktan sonra giriş yapabilirsiniz.');

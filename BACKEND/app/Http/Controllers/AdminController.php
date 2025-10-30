@@ -69,44 +69,66 @@ class AdminController extends Controller
      * 📊 Yönetim Dashboard istatistikleri
      */
     public function getDashboardStats(Request $request)
-    {
-        // 🧩 Kullanıcı İstatistikleri
+{
+    try {
+        // 🧩 Kullanıcı istatistikleri
         $totalUsers = User::count();
         $pendingUsers = User::where('status', 'pending')->count();
         $approvedUsers = User::where('status', 'approved')->count();
 
-        // 🍽 Menü İstatistikleri
-        $totalMenus = Menu::count();
-        $todayMenu = Menu::whereDate('date', Carbon::today())->first();
+        // 📅 Bugünün tarihi (string olarak)
+        $today = now()->toDateString();
 
-        // 📆 Son 7 Günlük Menü Sayısı
-        $startDate = Carbon::today()->subDays(6);
-        $last7Menus = Menu::where('date', '>=', $startDate)->get(['date']);
+        // 🍽 Menü istatistikleri
+        $totalMenus = Menu::count();
+        $todayMenu = Menu::where('date', $today)->first(); // ✅ Mongo için doğrudan string karşılaştırma
+
+        // 📆 Son 7 gün
+        $startDate = now()->subDays(6)->toDateString();
+        $menusLast7 = Menu::where('date', '>=', $startDate)->get(['date']);
+
         $last7Data = [];
         for ($i = 0; $i < 7; $i++) {
-            $day = $startDate->copy()->addDays($i)->format('Y-m-d');
+            $day = now()->subDays(6 - $i)->toDateString();
             $last7Data[$day] = 0;
         }
-        foreach ($last7Menus as $menu) {
-            $key = Carbon::parse($menu->date)->format('Y-m-d');
-            if (isset($last7Data[$key])) {
-                $last7Data[$key]++;
+
+        foreach ($menusLast7 as $menu) {
+            $menuDate = is_string($menu->date)
+                ? $menu->date
+                : (string) \Carbon\Carbon::parse($menu->date)->toDateString();
+
+            if (isset($last7Data[$menuDate])) {
+                $last7Data[$menuDate]++;
             }
         }
 
-        // 📈 Aylık Menü Grafiği (yıl-ay bazında)
-        $monthlyData = Menu::selectRaw('YEAR(date) as year, MONTH(date) as month, COUNT(*) as count')
-            ->groupBy('year', 'month')
-            ->orderBy('year')
-            ->orderBy('month')
-            ->get();
-
-        // 🍛 Son 30 Günün En Popüler Menüleri
-        $since30 = Carbon::today()->subDays(30);
-        $menus = Menu::where('date', '>=', $since30)->get(['items']);
-        $itemFrequency = [];
+        // 📊 Aylık veri hesaplama (manuel)
+        $menus = Menu::all(['date']);
+        $monthlyData = [];
 
         foreach ($menus as $menu) {
+            $menuDate = is_string($menu->date)
+                ? $menu->date
+                : (string) \Carbon\Carbon::parse($menu->date)->toDateString();
+
+            $monthKey = substr($menuDate, 0, 7); // YYYY-MM formatı
+            $monthlyData[$monthKey] = ($monthlyData[$monthKey] ?? 0) + 1;
+        }
+
+        $monthlyData = collect($monthlyData)->map(function ($count, $month) {
+            return [
+                'month' => $month,
+                'count' => $count
+            ];
+        })->values();
+
+        // 🍛 Son 30 günün popüler menüleri
+        $since30 = now()->subDays(30)->toDateString();
+        $recentMenus = Menu::where('date', '>=', $since30)->get(['items']);
+
+        $itemFrequency = [];
+        foreach ($recentMenus as $menu) {
             foreach ($menu->items ?? [] as $item) {
                 $name = trim($item['name'] ?? '');
                 if ($name === '') continue;
@@ -120,6 +142,7 @@ class AdminController extends Controller
             $topItems[] = ['name' => $name, 'count' => $count];
         }
 
+        // 🎯 JSON cevabı
         return response()->json([
             'userStats' => [
                 'total' => $totalUsers,
@@ -133,6 +156,16 @@ class AdminController extends Controller
                 'byMonth' => $monthlyData,
                 'topItems' => $topItems,
             ],
-        ]);
+        ], 200);
+    } catch (\Throwable $e) {
+        // ❌ Hata durumunda log ve JSON hata cevabı
+        \Log::error('Dashboard error: ' . $e->getMessage());
+        return response()->json([
+            'error' => $e->getMessage(),
+            'line' => $e->getLine(),
+            'file' => $e->getFile(),
+        ], 500);
     }
+}
+
 }

@@ -1,73 +1,109 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-6">
-    <div class="max-w-6xl mx-auto">
-      <header class="py-4 border-b border-gray-200 mb-8">
-        <h1 class="text-3xl font-extrabold text-blue-800">Kayıt Onayı Bekleyen Kullanıcılar</h1>
-        <p class="text-gray-500 mt-1">Yeni kayıtları buradan inceleyebilir ve onaylayabilirsiniz.</p>
+  <div class="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white px-6 py-10">
+    <div class="max-w-7xl mx-auto">
+      <!-- HEADER -->
+      <header class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div>
+          <h1 class="text-4xl font-extrabold flex items-center gap-3">
+            <i class="i-lucide-user-check text-5xl text-emerald-400"></i>
+            Kayıt Onayı Bekleyen Kullanıcılar
+          </h1>
+          <p class="text-sm text-gray-300 mt-1">
+            Yeni kayıtları buradan inceleyebilir, belgelerini kontrol edebilir ve onay verebilirsiniz.
+          </p>
+        </div>
+
+        <NuxtLink
+          to="/admin"
+          class="text-sm bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2 rounded-lg text-white/90 transition"
+        >
+          ← Admin Paneline Geri Dön
+        </NuxtLink>
       </header>
 
-      <div v-if="loading" class="text-center py-12 text-gray-500">
-        <p class="text-lg">Kullanıcı listesi yükleniyor...</p>
+      <!-- LOADING / ERROR -->
+      <div v-if="loading" class="text-center py-12 text-gray-300">
+        <p class="text-lg animate-pulse">🔄 Kullanıcı listesi yükleniyor...</p>
       </div>
 
-      <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-        <strong class="font-bold">Erişim Hatası!</strong>
-        <span class="block sm:inline"> {{ error }}</span>
+      <div
+        v-else-if="error"
+        class="bg-red-900/40 border border-red-500/40 text-red-200 px-5 py-4 rounded-lg text-center mb-6"
+      >
+        ⚠️ {{ error }}
       </div>
 
-      <div v-else>
-        <h2 class="text-xl font-bold mb-4 text-gray-700">Toplam Bekleyen: {{ users.length }}</h2>
-        
-        <div class="overflow-x-auto bg-white shadow-lg rounded-lg">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+      <!-- TABLE -->
+      <div v-else class="backdrop-blur-lg bg-white/5 border border-white/10 rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-5 border-b border-white/10 flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-white/90">
+            👥 Toplam Bekleyen: <span class="text-emerald-400 font-bold">{{ users.length }}</span>
+          </h2>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-white/10">
+            <thead class="bg-white/10 text-left text-xs uppercase text-gray-300">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ad Soyad</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefon / Birim</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kayıt Tarihi</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Belge Durumu</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
+                <th class="px-6 py-3 font-semibold">Ad Soyad</th>
+                <th class="px-6 py-3 font-semibold">Telefon / Birim</th>
+                <th class="px-6 py-3 font-semibold">Kayıt Tarihi</th>
+                <th class="px-6 py-3 font-semibold">Belge</th>
+                <th class="px-6 py-3 font-semibold text-center">İşlemler</th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="user in users" :key="user.id">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ user.name }} {{ user.surname }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div class="font-semibold">{{ user.phone }}</div>
-                    <div class="text-xs">{{ user.unit }}</div>
+
+            <tbody class="divide-y divide-white/10">
+              <tr
+                v-for="user in users"
+                :key="user._id"
+                class="hover:bg-white/5 transition"
+              >
+                <td class="px-6 py-4 text-sm font-medium text-white">
+                  {{ user.name }} {{ user.surname }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(user.created_at) }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                  <span 
-                    v-if="user.document_path" 
-                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
+
+                <td class="px-6 py-4 text-sm text-gray-300">
+                  <div>{{ user.phone }}</div>
+                  <div class="text-xs text-gray-400">{{ user.unit }}</div>
+                </td>
+
+                <td class="px-6 py-4 text-sm text-gray-300">
+                  {{ formatDate(user.created_at) }}
+                </td>
+
+                <td class="px-6 py-4">
+                  <span
+                    v-if="user.document_path"
+                    class="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-300 border border-green-500/30"
                   >
                     Yüklendi
                   </span>
-                  <span 
-                    v-else 
-                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800"
+                  <span
+                    v-else
+                    class="px-3 py-1 text-xs font-semibold rounded-full bg-red-500/20 text-red-300 border border-red-500/30"
                   >
                     Yok
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                  <button 
-                    @click="handleDownload(user.id)"
+
+                <td class="px-6 py-4 text-center space-x-2">
+                  <button
+                    @click="handleDownload(user._id)"
                     :disabled="!user.document_path"
-                    class="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-xs transition disabled:opacity-50"
+                    class="px-3 py-1.5 text-xs rounded-md bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/40 text-blue-200 transition disabled:opacity-50"
                   >
-                    Belgeyi İndir
+                    Belge
                   </button>
-                  <button 
-                    @click="rejectUser(user.id)"
-                    class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-xs transition"
+                  <button
+                    @click="rejectUser(user._id)"
+                    class="px-3 py-1.5 text-xs rounded-md bg-red-500/20 hover:bg-red-500/40 border border-red-400/40 text-red-300 transition"
                   >
-                    Reddet/Sil
+                    Reddet
                   </button>
-                  <button 
-                    @click="approveUser(user.id)"
-                    class="bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded text-xs transition"
+                  <button
+                    @click="approveUser(user._id)"
+                    class="px-3 py-1.5 text-xs rounded-md bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-400/40 text-emerald-300 transition"
                   >
                     Onayla
                   </button>
@@ -77,111 +113,128 @@
           </table>
         </div>
       </div>
+
+      <!-- EMPTY STATE -->
+      <div v-if="!loading && users.length === 0" class="text-center text-gray-300 py-16 text-lg">
+        🎉 Şu anda onay bekleyen kullanıcı bulunmuyor.
+      </div>
     </div>
   </div>
 </template>
 
+
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router'; 
-import useAuth from '../composables/useAuth'; 
-import { checkAuthGuard } from '../utils/auth-guard.js'; 
+import { ref, onMounted } from 'vue'
+import useAuth from '../composables/useAuth'
 
-// --- Veri ve Durum Yönetimi ---
-const router = useRouter();
-const users = ref([]);
-const loading = ref(true);
-const error = ref(null);
+const { logout } = useAuth()
 
-const { getToken, logout } = useAuth(); 
-const API_BASE = 'http://127.0.0.1:8000/api';
+const users = ref([])
+const loading = ref(true)
+const error = ref(null)
 
-// --- Lifecycle ve Erişim Kontrolü ---
-onMounted(() => {
-    checkAuthGuard(); 
-    fetchPendingUsers();
-});
+// ----------------------------------------------------
+// ✏️ DEĞİŞİKLİK 1: API_BASE güncellendi
+// ----------------------------------------------------
+const API_BASE = '/api/admin' // YENİ HALİ (Proxy için)
 
-// --- API İşlemleri ---
+// 👮 Admin sayfası güvenliği
+
+// 📦 Bekleyen kullanıcıları getir
 const fetchPendingUsers = async () => {
-    loading.value = true;
-    error.value = null;
-    try {
-        const token = getToken(); 
-        if (!token) throw new Error("Token not found");
-        
-        const response = await $fetch(`${API_BASE}/admin/pending-users`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        users.value = response;
-
-    } catch (err) {
-        console.error("Bekleyen kullanıcılar yüklenemedi:", err);
-        if (err.statusCode === 403 || err.statusCode === 401) {
-            error.value = "Yönetici yetkiniz yok veya oturum süreniz doldu.";
-            logout();
-            router.push('/login');
-        } else {
-             error.value = "Veri yüklenirken bir hata oluştu.";
-        }
-    } finally {
-        loading.value = false;
+  loading.value = true
+  error.value = null
+  try {
+    const response = await $fetch(`${API_BASE}/users/pending`, {
+      // credentials: 'include', // ✏️ 'credentials' kaldırıldı
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+    users.value = response
+  } catch (err) {
+    console.error('❌ Bekleyen kullanıcılar yüklenemedi:', err)
+    if (err.statusCode === 401) {
+      error.value = 'Oturum süresi dolmuş, yeniden giriş yapmanız gerekiyor.'
+      await logout()
+      return navigateTo('/login')
+    } else {
+      error.value = 'Veri yüklenirken bir hata oluştu.'
     }
-};
+  } finally {
+    loading.value = false
+  }
+}
 
-const handleDownload = (userId) => {
-    const token = getToken();
-    const downloadUrl = `${API_BASE}/admin/download-document/${userId}?token=${token}`;
-    window.open(downloadUrl, '_blank');
-};
-
-const approveUser = async (userId) => {
-    if (!confirm('Bu kullanıcıyı onaylamak ve hesabı aktif etmek istediğinizden emin misiniz?')) return;
+// 📄 Belge görüntüleme (💡 $fetch ile iyileştirildi)
+const handleDownload = async (userId) => {
+  try {
+    // ----------------------------------------------------
+    // ✏️ DEĞİŞİKLİK 2: Standart 'fetch' yerine '$fetch' kullanıldı
+    // ----------------------------------------------------
+    const blob = await $fetch(`${API_BASE}/users/${userId}/document`, {
+      method: 'GET',
+      // credentials: 'include', // <-- Kaldırıldı
+      responseType: 'blob' // <-- $fetch'e bunun bir dosya (blob) olduğunu söylüyoruz
+    })
     
-    try {
-        const token = getToken();
-        // API çağrısı
-        await $fetch(`${API_BASE}/admin/approve-user/${userId}`, {
-            method: 'POST', 
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+    // Kalan kod aynı
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `belge_${userId}.pdf`
+    link.click()
+    window.URL.revokeObjectURL(url); // Hafızayı temizle
+  } catch (err) {
+    console.error('❌ Belge indirilemedi:', err)
+    alert('Belge indirilemedi!')
+  }
+}
 
-        // Başarılı onay sonrası kullanıcıyı listeden kaldır
-        users.value = users.value.filter(u => u.id !== userId);
-        alert('Kullanıcı başarıyla onaylandı.');
+// ✅ Kullanıcıyı onayla
+const approveUser = async (userId) => {
+  if (!confirm('Bu kullanıcıyı onaylamak istediğinizden emin misiniz?')) return
+  try {
+    await $fetch(`${API_BASE}/users/${userId}/approve`, {
+      method: 'POST',
+      // credentials: 'include', // ✏️ 'credentials' kaldırıldı
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+    users.value = users.value.filter(u => u._id !== userId)
+    alert('✅ Kullanıcı başarıyla onaylandı!')
+  } catch {
+    alert('Onay sırasında hata oluştu.')
+  }
+}
 
-    } catch (err) {
-        console.error("Onaylama Hatası:", err);
-        alert('Kullanıcı onaylanırken bir hata oluştu.');
-    }
-};
-
+// ❌ Kullanıcıyı reddet
 const rejectUser = async (userId) => {
-    if (!confirm('UYARI: Bu kullanıcıyı reddetmek, kaydı kalıcı olarak silecektir. Devam etmek istiyor musunuz?')) return;
+  if (!confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?')) return
+  try {
+    await $fetch(`${API_BASE}/users/${userId}/reject`, {
+      method: 'DELETE',
+      // credentials: 'include', // ✏️ 'credentials' kaldırıldı
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+    users.value = users.value.filter(u => u._id !== userId)
+    alert('🚫 Kullanıcı silindi!')
+  } catch {
+    alert('Kullanıcı silinirken hata oluştu.')
+  }
+}
 
-    try {
-        const token = getToken();
-        // API çağrısı
-        await $fetch(`${API_BASE}/admin/reject-user/${userId}`, {
-            method: 'DELETE', // DELETE metodunu kullanıyoruz
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        // Başarılı silme sonrası kullanıcıyı listeden kaldır
-        users.value = users.value.filter(u => u.id !== userId);
-        alert('Kullanıcı kaydı başarıyla silindi.');
-
-    } catch (err) {
-        console.error("Silme Hatası:", err);
-        alert('Kayıt silinirken bir hata oluştu.');
-    }
-};
-
-
-// --- Yardımcı Fonksiyonlar ---
+// 🕒 Tarih formatı
 const formatDate = (dateString) => {
-  const options = { year: 'numeric', month: 'short', day: 'numeric' };
-  return new Date(dateString).toLocaleDateString('tr-TR', options);
-};
+  const options = { year: 'numeric', month: 'short', day: 'numeric' }
+  return new Date(dateString).toLocaleDateString('tr-TR', options)
+}
 
+onMounted(fetchPendingUsers)
 </script>

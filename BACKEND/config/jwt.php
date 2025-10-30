@@ -109,7 +109,7 @@ return [
     | Ayrıca EncryptCookies.php içinde:
     | protected $except = ['token'];
     */
-    'decrypt_cookies' => true,
+    'decrypt_cookies' => false,
 
     /*
     |--------------------------------------------------------------------------

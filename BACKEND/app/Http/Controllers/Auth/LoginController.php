@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Exception;
 
 class LoginController extends Controller
 {
@@ -32,35 +33,45 @@ class LoginController extends Controller
             ]);
         }
 
+        // 🔐 Özel claim ekle
         $customClaims = ['role' => $user->role];
         $token = JWTAuth::claims($customClaims)->fromUser($user);
 
-        // ✅ Local için cookie ayarları
+        // 🍪 Cookie ayarları (localhost + 127.0.0.1 için uyumlu)
         $cookie = cookie(
             'token',
             $token,
             60 * 24,    // 1 gün
-            '/',
-            '127.0.0.1', // local domain
-            false,       // secure = false (HTTP)
-            true,        // HttpOnly
+            '/',        // path
+            null,       // domain = otomatik (localhost / 127.0.0.1 fark etmez)
+            false,      // secure = false (HTTP)
+            true,       // HttpOnly
             false,
-            'Lax'        // Chrome kabul eder
+            'Lax'
         );
 
         return response()->json([
             'message' => 'Giriş başarılı.',
             'user' => $user->only('_id','name','surname','phone','unit','balance','role'),
-            'debug_token' => $token // geçici debug
+            'debug_token' => $token // geçici debug (istersen silebilirsin)
         ])->withCookie($cookie);
     }
 
     public function logout(Request $request)
     {
         try {
-            JWTAuth::invalidate(JWTAuth::getToken());
-        } catch (\Exception $e) {}
+            // 🔄 Cookie'deki token'ı oku
+            $token = $request->cookie('token') ?? JWTAuth::getToken();
 
+            if ($token) {
+                JWTAuth::setToken($token)->invalidate(); // Token’ı geçersiz yap
+            }
+        } catch (Exception $e) {
+            // Sadece loglama amaçlı hata bastırma
+            \Log::warning('JWT logout hatası: ' . $e->getMessage());
+        }
+
+        // 🍪 Cookie’yi sıfırla
         $forgetCookie = cookie()->forget('token');
 
         return response()->json([

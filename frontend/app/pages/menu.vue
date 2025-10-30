@@ -63,11 +63,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import useAuth from '../composables/useAuth'; // Yeni, basitleştirilmiş useAuth'u çağırıyoruz
-import useAuthGuard from '../composables/useAuthGuard';
+import useAuth from '../composables/useAuth'; 
 
-// Sayfayı sadece giriş yapmış kullanıcıların görebilmesi için koruma altına alıyoruz.
-const { protectUserPage } = useAuthGuard();
 protectUserPage();
 
 // --- Durum Yönetimi ---
@@ -75,24 +72,34 @@ const loading = ref(true);
 const error = ref(null);
 const menu = ref(null);
 
-// Gerekli state ve fonksiyonları yeni useAuth'dan alıyoruz
-const { user, logout, token } = useAuth();
+// ----------------------------------------------------
+// ✏️ DEĞİŞİKLİK 1: 'token' kaldırıldı.
+// ----------------------------------------------------
+// Gerekli state ve fonksiyonları useAuth'dan alıyoruz
+// ESKİ HALİ: const { user, logout, token } = useAuth();
+const { user, logout } = useAuth(); // YENİ HALİ
 
 // --- Veri Çekme Fonksiyonu ---
 const fetchMenu = async () => {
   loading.value = true;
   error.value = null;
 
-  // Token'ı artık localStorage'dan değil, merkezi useAuth'dan alıyoruz.
-  if (!token.value) {
-    error.value = 'Oturum bilgisi bulunamadı.';
-    await logout();
-    return;
-  }
+  // ----------------------------------------------------
+  // ✏️ DEĞİŞİKLİK 2: Token kontrolü kaldırıldı.
+  // 'protectUserPage()' bu işi zaten yaptı.
+  // ----------------------------------------------------
+  // if (!token.value) { ... } BLOKU SİLİNDİ
 
   try {
-    const response = await $fetch('http://127.0.0.1:8000/api/menu/today', {
-      headers: { 'Authorization': `Bearer ${token.value}` }
+    // ----------------------------------------------------
+    // ✏️ DEĞİŞİKLİK 3: API isteği proxy uyumlu hale getirildi.
+    // ----------------------------------------------------
+    const response = await $fetch('/api/menu/today', {
+      // ESKİ URL: 'http://127.0.0.1:8000/api/menu/today'
+      // ESKİ HEADERS: { 'Authorization': `Bearer ${token.value}` }
+      
+      // 'headers' bloğu tamamen kaldırıldı.
+      // Proxy, cookie'yi otomatik olarak iletecek.
     });
     menu.value = response;
   } catch (err) {

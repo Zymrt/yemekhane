@@ -8,7 +8,7 @@
           Yönetim Dashboard
         </h1>
 
-        <!-- Sekmeler -->
+        <!-- SEKME BUTONLARI -->
         <nav class="flex items-center gap-4 text-sm">
           <button
             v-for="tab in tabs"
@@ -46,13 +46,20 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-// Statik importlar (dinamik import kaldırıldı)
+definePageMeta({ layout: 'admin' })
+
+// ----------------------------------------------------
+// ⛔️ 'useAuthGuard' veya 'protectAdminPage' ile ilgili
+// HİÇBİR KOD OLMAMALI. Hepsi silinmeli.
+// ----------------------------------------------------
+
+// Statik importlar (dinamik import yerine sabit componentler)
 import UserReports from '../components/reports/UserReports.vue'
 import MenuStats from '../components/reports/MenuStats.vue'
 import SystemLogs from '../components/reports/SystemLogs.vue'
 import ActivityChart from '../components/reports/ActivityChart.vue'
 
-// Sekmeler
+// Sekme yapısı
 const tabs = [
   { id: 'users', name: 'Kullanıcı Raporları', component: UserReports },
   { id: 'menu', name: 'Menü İstatistikleri', component: MenuStats },
@@ -68,10 +75,12 @@ const currentComponent = computed(() => {
 </script>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.4s ease;
 }
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 </style>

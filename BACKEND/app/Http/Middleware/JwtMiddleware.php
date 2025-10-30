@@ -11,13 +11,17 @@ class JwtMiddleware
     public function handle($request, Closure $next)
     {
         try {
-            // 🍪 Önce cookie'den token al, yoksa header'dan
+            // 🍪 1️⃣ Token'ı cookie'den al, yoksa header'dan
             $token = $request->cookie('token') ?? $request->bearerToken();
 
             if (!$token) {
                 return response()->json(['message' => 'Token bulunamadı.'], 401);
             }
 
+            // 🧠 2️⃣ Header'a manuel olarak ekle (bazı JWTAuth çağrıları bunu ister)
+            $request->headers->set('Authorization', 'Bearer ' . $token);
+
+            // 🔐 3️⃣ Token'ı doğrula
             $user = JWTAuth::setToken($token)->authenticate();
 
             if (!$user) {
@@ -31,6 +35,7 @@ class JwtMiddleware
             ], 401);
         }
 
+        // ✅ Token geçerli, devam et
         return $next($request);
     }
 }

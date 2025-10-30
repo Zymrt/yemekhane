@@ -12,6 +12,6 @@ class EncryptCookies extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'token', // 🍪 JWT cookie’si şifrelenmesin
+        'token', // ✅ JWT cookie hariç tutuldu
     ];
 }

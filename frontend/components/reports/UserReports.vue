@@ -64,25 +64,31 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import useAuth from '../composables/useAuth'
 
-const { token } = useAuth()
+// ----------------------------------------------------
+// 1. 'useAuth' ve 'token' TAMAMEN KALDIRILDI.
+//
+// Middleware (auth.global.js) kimlik doğrulamasını zaten yaptı.
+// Proxy, cookie'yi otomatik olarak gönderecek.
+// Bu component'in 'token' bilmesine gerek yok.
+// ----------------------------------------------------
 
 const loading = ref(true)
 const error = ref(null)
 
+// Bu component hem kullanıcı hem de menü istatistiklerini çekiyor gibi görünüyor.
+// Bu bir sorun değil, backend'den gelen veriye göre isimlendirme size kalmış.
 const userStats = ref({ total: 0, pending: 0, approved: 0 })
 const menuStats = ref({ total: 0, today: null, last7Days: {}, byMonth: [], topItems: [] })
 
+// 'lastUpdateText' computed'ınızda bir sorun yoktu, aynı kalabilir.
 const lastUpdateText = computed(() => {
-  // today veya byMonth verisinden insani bir yazı üretelim
   if (menuStats.value.today?.updated_at) {
     try {
       const d = new Date(menuStats.value.today.updated_at)
       return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })
     } catch { /* noop */ }
   }
-  // byMonth’tan en son tarih
   if (menuStats.value.byMonth?.length) {
     const last = menuStats.value.byMonth[menuStats.value.byMonth.length - 1]
     const d = new Date(`${last.year}-${String(last.month).padStart(2,'0')}-01`)
@@ -91,18 +97,33 @@ const lastUpdateText = computed(() => {
   return '—'
 })
 
+// Sayfa yüklendiğinde veriyi çek
 onMounted(async () => {
   try {
-    const res = await $fetch('http://127.0.0.1:8000/api/admin/dashboard', {
-      headers: { Authorization: `Bearer ${token.value}` },
+    // ----------------------------------------------------
+    // 2. API İSTEĞİ PROXY UYUMLU HALE GETİRİLDİ
+    // ----------------------------------------------------
+    const res = await $fetch('/api/admin/dashboard', {
+      // 3. 'headers' bloğu TAMAMEN SİLİNDİ.
+      // Proxy, kimlik doğrulama cookie'sini otomatik olarak ekler.
     })
+    // ----------------------------------------------------
 
-    // Backend dönen format: { userStats: {...}, menuStats: {...} }
+    // Veriyi state'e aktar
     userStats.value = res?.userStats ?? userStats.value
     menuStats.value = res?.menuStats ?? menuStats.value
+
   } catch (e) {
-    console.error(e)
+    console.error('❌ Dashboard verisi çekilemedi:', e)
     error.value = 'Dashboard verileri alınamadı.'
+    
+    // 💡 İpucu: Eğer cookie'nin süresi dolarsa diye
+    // 401 kontrolü eklemek iyi bir fikirdir.
+    if (e?.statusCode === 401) {
+      // useAuth'u sadece logout için çağır
+      const { logout } = useAuth()
+      await logout()
+    }
   } finally {
     loading.value = false
   }

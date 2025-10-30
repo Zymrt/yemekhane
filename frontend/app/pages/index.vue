@@ -39,11 +39,9 @@
 
 <script setup>
 import useAuth from '../composables/useAuth';
-import useAuthGuard from '../composables/useAuthGuard';
 
 // Gerekli state ve fonksiyonları çağırıyoruz
 const { isLoggedIn } = useAuth();
-const { protectGuestPage } = useAuthGuard();
 
 // Güvenlik görevlimizi hemen çalıştırıyoruz!
 // Bu fonksiyon, eğer kullanıcı giriş yapmışsa, onu rolüne göre

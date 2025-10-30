@@ -67,6 +67,7 @@ const debugText = ref('Bekleniyor...')
 
 async function handleLogin() {
   debugText.value = '🔄 Giriş yapılıyor...'
+  // Bu 'login' fonksiyonu useAuth'dan geliyor ve ZATEN proxy uyumlu.
   const ok = await login({ phone: phone.value, password: password.value })
   debugText.value = ok
     ? '✅ Giriş başarılı! Cookie ayarlandı.'
@@ -76,8 +77,11 @@ async function handleLogin() {
 async function getProfile() {
   debugText.value = '📡 Profil verisi isteniyor...'
   try {
-    const response = await $fetch('http://127.0.0.1:8000/api/user/profile', {
-      credentials: 'include',
+    // ----------------------------------------------------
+    // ✏️ DEĞİŞİKLİK: API isteği proxy uyumlu hale getirildi.
+    // ----------------------------------------------------
+    const response = await $fetch('/api/user/profile', { // YENİ URL
+      // credentials: 'include', // <-- PROXY İÇİN GEREK YOK
     })
     debugText.value = JSON.stringify(response, null, 2)
   } catch (e) {
@@ -87,6 +91,7 @@ async function getProfile() {
 
 async function handleLogout() {
   debugText.value = '🚪 Çıkış yapılıyor...'
+  // Bu 'logout' fonksiyonu useAuth'dan geliyor ve ZATEN proxy uyumlu.
   await logout()
   debugText.value = '✅ Çıkış yapıldı, cookie silindi.'
 }
