@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-orange-400 via-blue-500 to-indigo-600 text-white p-4">
+  <div class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-orange-400 via-green-500 to-blue-600 text-white p-4">
     
     <div v-if="!isLoggedIn" class="text-center animate-fade-in">
       <div class="flex flex-col items-center mb-12">
@@ -39,6 +39,8 @@
 
 <script setup>
 import useAuth from '../composables/useAuth';
+import protectGuestPage from '../composables/protectGuestPage'
+
 
 // Gerekli state ve fonksiyonları çağırıyoruz
 const { isLoggedIn } = useAuth();

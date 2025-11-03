@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-[#0a0f3c] via-[#101c5a] to-[#060920] text-white">
+  <div class="min-h-screen bg-gradient-to-br from-[#1e293b] via-[#1e293b] to-[#1e293b] text-white">
     <!-- ÜST NAV -->
     <header class="backdrop-blur-md bg-white/10 border-b border-white/10 sticky top-0 z-20">
       <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">

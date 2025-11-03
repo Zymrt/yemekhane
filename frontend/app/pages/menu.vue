@@ -1,125 +1,115 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-6">
-    <div class="max-w-4xl mx-auto">
-      
-      <header class="py-4 border-b border-gray-200 mb-8">
-        <div class="flex justify-between items-center">
-          <h1 class="text-3xl font-extrabold text-blue-800">Günlük Menü</h1>
-          
-          <div class="flex items-center space-x-4">
-            <NuxtLink 
-              v-if="isAdmin" 
-              to="/admin/add-menu"
-              class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition duration-200 whitespace-nowrap"
-            >
-              Menü Ekle (Admin)
-            </NuxtLink>
+  <!-- Sayfayı user layout ile sar ve named slot'ları layout'a geçir -->
+  <NuxtLayout name="user">
+    <!-- 🔹 Navbar butonları -->
+    <template #left-buttons>
+      <NuxtLink to="/menu" class="text-white font-semibold hover:text-orange-200 transition">
+        ANA SAYFA
+      </NuxtLink>
+      <NuxtLink to="/reports" class="text-white font-semibold hover:text-orange-200 transition">
+        DEĞERLENDİRMELERİM
+      </NuxtLink>
+    </template>
 
-            <button 
-              @click="handleLogout"
-              class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition duration-200"
-            >
-              Çıkış Yap
-            </button>
-          </div>
+    <template #right-buttons>
+      <NuxtLink to="/notifications" class="text-white font-semibold hover:text-orange-200 transition">
+       HESAP HAREKETLERİ
+      </NuxtLink>
+      <NuxtLink to="/profile" class="text-white font-semibold hover:text-orange-200 transition">
+       BAKİYE YÜKLE 
+      </NuxtLink>
+    </template>
+
+    <!-- 💫 İçerik -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mt-6">
+      <!-- 👤 Profil Bilgileri -->
+      <div
+        class="md:col-span-1 bg-white/30 backdrop-blur-2xl border border-white/30
+               rounded-3xl p-6 shadow-lg hover:shadow-2xl transform hover:-translate-y-1
+               transition-all duration-300"
+      >
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 drop-shadow-sm">Profil Bilgileri</h2>
+        <div class="space-y-3 text-gray-800">
+          <p><strong>Ad Soyad:</strong> {{ user?.name }} {{ user?.surname }}</p>
+          <p><strong>Birim:</strong> {{ user?.unit }}</p>
+          <p><strong>Telefon:</strong> {{ user?.phone || '-' }}</p>
+          <p><strong>Kayıt Tarihi:</strong> {{ formatDate(user?.created_at) }}</p>
+          <p class="mt-3">
+            <strong>Bakiye: </strong>
+            <span class="text-emerald-600 font-bold text-lg">{{ user?.balance?.toFixed(2) || '0.00' }} ₺</span>
+          </p>
         </div>
-
-        <div v-if="user" class="mt-4 p-3 bg-white border border-gray-200 rounded-lg shadow-sm flex justify-between items-center text-sm">
-          <p class="font-semibold text-gray-700">Merhaba, {{ user.name }} {{ user.surname }} ({{ user.unit }})</p>
-          <div class="font-bold text-lg text-green-600">
-            Bakiye: {{ user.balance?.toFixed(2) || 0.00 }} ₺ 
-          </div>
-        </div>
-      </header>
-
-      <div v-if="loading" class="text-center py-12 text-gray-500">
-        <p class="text-lg">Menü yükleniyor...</p>
       </div>
 
-      <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-        <strong class="font-bold">Hata!</strong>
-        <span class="block sm:inline"> {{ error }}</span>
-      </div>
+      <!-- 🍲 Günlük Menü -->
+      <div
+        class="md:col-span-2 bg-white/30 backdrop-blur-2xl border border-white/30
+               rounded-3xl p-6 shadow-lg hover:shadow-2xl transform hover:-translate-y-1
+               transition-all duration-300"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-gray-900 drop-shadow-sm">Bugünün Menüsü</h2>
+          <NuxtLink
+            to="/menu"
+            class="text-sky-700 hover:text-sky-900 font-medium underline decoration-sky-400"
+          >
+            Tüm menüyü gör →
+          </NuxtLink>
+        </div>
 
-      <div v-else>
-        <h2 class="text-2xl font-bold mb-4 text-gray-700">Menü: {{ menu?.date || 'Bugün' }}</h2>
-        
-        <div class="bg-white shadow-lg rounded-lg p-6">
-          <ul class="space-y-4">
-            <li 
-              v-for="(item, index) in menu.items" 
-              :key="index"
-              class="border-b pb-3 last:border-b-0"
-            >
-              <p class="text-xl font-medium text-gray-800">{{ item.name }}</p>
-              <p v-if="item.description" class="text-sm text-gray-500">{{ item.description }}</p>
-            </li>
-          </ul>
+        <div v-if="loading" class="text-center text-gray-600 py-6">Menü yükleniyor...</div>
+        <div v-else-if="error" class="text-red-600 text-center py-6">{{ error }}</div>
+
+        <ul v-else class="divide-y divide-white/50">
+          <li
+            v-for="(item, index) in (menu?.items || menu || [])"
+            :key="index"
+            class="py-3 flex justify-between items-center text-gray-800"
+          >
+            <span class="font-medium">{{ item.name }}</span>
+            <span v-if="item.calories" class="text-sm text-gray-500">{{ item.calories }} kcal</span>
+          </li>
+        </ul>
+
+        <div v-if="!(menu?.items?.length || menu?.length)" class="text-center text-gray-600 py-6">
+          Bugün için menü bulunamadı 🍽️
         </div>
       </div>
     </div>
-  </div>
+  </NuxtLayout>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import useAuth from '../composables/useAuth'; 
+import { ref, onMounted } from 'vue'
+import useAuth from '../composables/useAuth'
+import protectUserPage from '../composables/protectUserPage'
 
-protectUserPage();
+// ⚠️ BUNU KALDIRDIK: definePageMeta({ layout: 'user' })
+// Çünkü named slotları layout'a geçmek için <NuxtLayout name="user"> kullanıyoruz.
 
-// --- Durum Yönetimi ---
-const loading = ref(true);
-const error = ref(null);
-const menu = ref(null);
+protectUserPage()
 
-// ----------------------------------------------------
-// ✏️ DEĞİŞİKLİK 1: 'token' kaldırıldı.
-// ----------------------------------------------------
-// Gerekli state ve fonksiyonları useAuth'dan alıyoruz
-// ESKİ HALİ: const { user, logout, token } = useAuth();
-const { user, logout } = useAuth(); // YENİ HALİ
+const { user } = useAuth()
+const menu = ref(null)
+const loading = ref(true)
+const error = ref(null)
 
-// --- Veri Çekme Fonksiyonu ---
 const fetchMenu = async () => {
-  loading.value = true;
-  error.value = null;
-
-  // ----------------------------------------------------
-  // ✏️ DEĞİŞİKLİK 2: Token kontrolü kaldırıldı.
-  // 'protectUserPage()' bu işi zaten yaptı.
-  // ----------------------------------------------------
-  // if (!token.value) { ... } BLOKU SİLİNDİ
-
   try {
-    // ----------------------------------------------------
-    // ✏️ DEĞİŞİKLİK 3: API isteği proxy uyumlu hale getirildi.
-    // ----------------------------------------------------
-    const response = await $fetch('/api/menu/today', {
-      // ESKİ URL: 'http://127.0.0.1:8000/api/menu/today'
-      // ESKİ HEADERS: { 'Authorization': `Bearer ${token.value}` }
-      
-      // 'headers' bloğu tamamen kaldırıldı.
-      // Proxy, cookie'yi otomatik olarak iletecek.
-    });
-    menu.value = response;
+    const res = await $fetch('/api/menu/today')
+    menu.value = res
   } catch (err) {
-    console.error('Menü Yükleme Hatası:', err);
-    error.value = 'Menü yüklenirken bir hata oluştu veya yetkiniz yok.';
-    if (err.statusCode === 401) {
-      await logout();
-    }
+    console.error('Menü Hatası:', err)
+    error.value = 'Menü yüklenemedi.'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
-// --- Çıkış Fonksiyonu ---
-const handleLogout = async () => {
-  await logout(); // useAuth'daki global logout fonksiyonunu çağırır
-};
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleDateString('tr-TR')
+}
 
-// --- Sayfa Yüklendiğinde Menüyü Çekme ---
-onMounted(() => {
-  fetchMenu();
-});
+onMounted(fetchMenu)
 </script>
