@@ -31,15 +31,15 @@ Route::post('/refresh', [RefreshController::class, 'refresh']);
 // 🔍 Cookie test (isteğe bağlı, dev/test için)
 Route::get('/cookie-test', function (Request $request) {
     return response()->json([
-        'token_cookie' => $request->cookie('token') ? '✅ Cookie alındı' : '❌ Cookie yok',
-        'raw' => $request->cookie('token')
+        'access_token' => $request->cookie('access_token') ? '✅ Cookie alındı' : '❌ Cookie yok',
+        'refresh_token' => $request->cookie('refresh_token') ? '✅ Cookie alındı' : '❌ Cookie yok',
     ]);
 });
 
 // --------------------------------------------------------
 // 🔒 KORUMALI ROTLAR (JWT GEREKTİRİR)
 // --------------------------------------------------------
-Route::middleware(['jwt.auth'])->group(function () {
+Route::middleware(['token.auth'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout']);
     Route::get('/user/profile', [UserController::class, 'getProfile']);
     Route::get('/menu/today', [MenuController::class, 'getTodayMenu']);
@@ -65,8 +65,8 @@ Route::middleware(['jwt.auth'])->group(function () {
 
         Route::get('/cookie-test', function (\Illuminate\Http\Request $request) {
     return response()->json([
-        'token_cookie' => $request->cookie('token') ? '✅ Cookie alındı' : '❌ Cookie yok',
-        'raw' => $request->cookie('token'),
+        'access_token' => $request->cookie('access_token') ? '✅ Cookie alındı' : '❌ Cookie yok',
+        'refresh_token' => $request->cookie('refresh_token') ? '✅ Cookie alındı' : '❌ Cookie yok',
     ]);
 });
     });
