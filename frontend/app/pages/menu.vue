@@ -3,20 +3,20 @@
   <NuxtLayout name="user">
     <!-- 🔹 Navbar butonları -->
     <template #left-buttons>
-      <NuxtLink to="/menu" class="text-white font-semibold hover:text-orange-200 transition">
+      <NuxtLink to="/menu" class="btn btn-ghost">
         ANA SAYFA
       </NuxtLink>
-      <NuxtLink to="/reports" class="text-white font-semibold hover:text-orange-200 transition">
+      <NuxtLink to="/yorumlar" class="btn btn-ghost">
         DEĞERLENDİRMELERİM
       </NuxtLink>
     </template>
 
     <template #right-buttons>
-      <NuxtLink to="/notifications" class="text-white font-semibold hover:text-orange-200 transition">
-       HESAP HAREKETLERİ
+      <NuxtLink to="/hesap-hareketleri" class="btn btn-outline">
+        HESAP HAREKETLERİ
       </NuxtLink>
-      <NuxtLink to="/profile" class="text-white font-semibold hover:text-orange-200 transition">
-       BAKİYE YÜKLE 
+      <NuxtLink to="/bakiye" class="btn btn-primary">
+        BAKİYE YÜKLE
       </NuxtLink>
     </template>
 
@@ -47,12 +47,11 @@
                rounded-3xl p-6 shadow-lg hover:shadow-2xl transform hover:-translate-y-1
                transition-all duration-300"
       >
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-wrap gap-3 items-center justify-between mb-4">
           <h2 class="text-2xl font-bold text-gray-900 drop-shadow-sm">Bugünün Menüsü</h2>
-          <NuxtLink
-            to="/menu"
-            class="text-sky-700 hover:text-sky-900 font-medium underline decoration-sky-400"
-          >
+
+          <!-- Linki butona çevirdik -->
+          <NuxtLink to="/menu" class="btn btn-soft">
             Tüm menüyü gör →
           </NuxtLink>
         </div>
@@ -84,9 +83,6 @@ import { ref, onMounted } from 'vue'
 import useAuth from '../composables/useAuth'
 import protectUserPage from '../composables/protectUserPage'
 
-// ⚠️ BUNU KALDIRDIK: definePageMeta({ layout: 'user' })
-// Çünkü named slotları layout'a geçmek için <NuxtLayout name="user"> kullanıyoruz.
-
 protectUserPage()
 
 const { user } = useAuth()
@@ -113,3 +109,38 @@ const formatDate = (dateStr) => {
 
 onMounted(fetchMenu)
 </script>
+
+<style scoped>
+/* 🔘 Minimal buton sistemimiz (Tailwind @apply) */
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold transition
+         focus:outline-none focus:ring-2 focus:ring-offset-0 active:scale-[.99];
+}
+
+/* Navbar için “ghost” (şeffaf) */
+.btn-ghost {
+  @apply text-white/90 hover:text-white bg-white/0 hover:bg-white/10 border border-white/10;
+}
+
+/* Sağ taraftaki “outline” */
+.btn-outline {
+  @apply text-white border border-white/40 bg-transparent hover:bg-white/10;
+}
+
+/* Vurgulu buton */
+.btn-primary {
+  @apply text-white bg-gradient-to-r from-orange-500 via-orange-500 to-orange-600
+         hover:brightness-110 shadow-md;
+}
+
+/* İçerik alanındaki yumuşak buton */
+.btn-soft {
+  @apply text-sky-900 bg-white/70 hover:bg-white/90 border border-white/80
+         backdrop-blur-sm rounded-xl;
+}
+
+/* Küçük ekranlarda butonların nefes alması için */
+@media (max-width: 768px) {
+  .btn { @apply text-sm px-3 py-2; }
+}
+</style>

@@ -1,82 +1,83 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white py-10 px-6">
+  <div class="min-h-screen bg-slate-950 text-slate-100">
     <!-- HEADER -->
-    <div class="max-w-7xl mx-auto mb-12">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <header class="max-w-7xl mx-auto px-6 py-8">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <h1 class="text-4xl font-extrabold tracking-tight flex items-center gap-3">
-            <i class="i-lucide-shield-check text-orange-400 text-5xl"></i>
+          <h1 class="text-3xl font-extrabold tracking-tight flex items-center gap-3">
+            <i class="i-lucide-shield-check text-orange-400 text-4xl"></i>
             Yönetim Paneli
           </h1>
-          <p class="text-gray-300 mt-2 text-lg">
-            Hoş geldin <span class="text-orange-400 font-semibold">{{ user?.name || 'Yönetici' }}</span> 👋  
-            Sistem üzerinde tam yetkilisin.
+          <p class="text-slate-400 mt-2">
+            Hoş geldin <span class="text-orange-400 font-semibold">{{ user?.name || 'Yönetici' }}</span>.
+            Yetkilerin aktif.
           </p>
         </div>
         <div class="text-right">
-          <span class="text-sm text-gray-400">Güncel Tarih</span>
-          <div class="text-lg font-semibold">{{ new Date().toLocaleDateString('tr-TR') }}</div>
+          <div class="text-xs uppercase tracking-wide text-slate-500">Bugün</div>
+          <div class="text-sm font-medium text-slate-200">{{ currentDate }}</div>
+          <div class="text-xs text-slate-500">{{ currentTime }}</div>
         </div>
       </div>
-    </div>
+    </header>
 
     <!-- ANA MENÜ -->
-    <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-      
-      <!-- Kullanıcı Onayları -->
-      <NuxtLink
-        to="/admin/onay"
-        class="group relative bg-gradient-to-br from-cyan-600/10 to-cyan-400/5 hover:from-cyan-500/20 hover:to-cyan-400/10 border border-cyan-400/30 rounded-2xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-cyan-500/20"
-      >
-        <div class="flex items-center justify-center w-16 h-16 bg-cyan-500/10 rounded-full mb-6 group-hover:bg-cyan-500/20 transition-all duration-300">
-          <UserGroupIcon class="w-8 h-8 text-cyan-400" />
-        </div>
-        <h2 class="text-2xl font-bold mb-2">Kullanıcı Onayları</h2>
-        <p class="text-gray-300 text-sm">Yeni kayıtları onayla veya reddet.</p>
-        <div class="absolute top-4 right-4 text-xs font-semibold bg-orange-500 text-white px-2 py-1 rounded-full shadow-md">
-          Bekleyen Var
-        </div>
-      </NuxtLink>
+    <main class="max-w-7xl mx-auto px-6 pb-14">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Kullanıcı Onayları -->
+        <NuxtLink
+          to="/admin/onay"
+          class="card group"
+        >
+          <div class="card-icon bg-cyan-500/10 border-cyan-400/20">
+            <UserGroupIcon class="w-6 h-6 text-cyan-300" />
+          </div>
+          <h2 class="card-title">Kullanıcı Onayları</h2>
+          <p class="card-desc">Yeni kayıtları onayla veya reddet.</p>
+          <span class="badge">Bekleyen Var</span>
+        </NuxtLink>
 
-      <!-- Menü Yönetimi -->
-      <NuxtLink
-        to="/admin/add-menu"
-        class="group relative bg-gradient-to-br from-teal-600/10 to-teal-400/5 hover:from-teal-500/20 hover:to-teal-400/10 border border-teal-400/30 rounded-2xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-teal-500/20"
-      >
-        <div class="flex items-center justify-center w-16 h-16 bg-teal-500/10 rounded-full mb-6 group-hover:bg-teal-500/20 transition-all duration-300">
-          <ClipboardDocumentListIcon class="w-8 h-8 text-teal-400" />
-        </div>
-        <h2 class="text-2xl font-bold mb-2">Menü Yönetimi</h2>
-        <p class="text-gray-300 text-sm">Günlük yemek menüsünü düzenle.</p>
-      </NuxtLink>
+        <!-- Menü Yönetimi -->
+        <NuxtLink
+          to="/admin/add-menu"
+          class="card group"
+        >
+          <div class="card-icon bg-teal-500/10 border-teal-400/20">
+            <ClipboardDocumentListIcon class="w-6 h-6 text-teal-300" />
+          </div>
+          <h2 class="card-title">Menü Yönetimi</h2>
+          <p class="card-desc">Günlük yemek menüsünü düzenle.</p>
+        </NuxtLink>
 
-      <!-- Menüleri Görüntüle -->
-      <NuxtLink
-        to="/admin/menus"
-        class="group relative bg-gradient-to-br from-emerald-600/10 to-emerald-400/5 hover:from-emerald-500/20 hover:to-emerald-400/10 border border-emerald-400/30 rounded-2xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-emerald-500/20"
-      >
-        <div class="flex items-center justify-center w-16 h-16 bg-emerald-500/10 rounded-full mb-6 group-hover:bg-emerald-500/20 transition-all duration-300">
-          <ClipboardDocumentListIcon class="w-8 h-8 text-emerald-400" />
-        </div>
-        <h2 class="text-2xl font-bold mb-2">Menüleri Görüntüle</h2>
-        <p class="text-gray-300 text-sm">Tüm geçmiş menü kayıtlarını incele.</p>
-      </NuxtLink>
+        <!-- Menüleri Görüntüle -->
+        <NuxtLink
+          to="/admin/menus"
+          class="card group"
+        >
+          <div class="card-icon bg-emerald-500/10 border-emerald-400/20">
+            <ClipboardDocumentListIcon class="w-6 h-6 text-emerald-300" />
+          </div>
+          <h2 class="card-title">Menüleri Görüntüle</h2>
+          <p class="card-desc">Geçmiş menü kayıtlarını incele.</p>
+        </NuxtLink>
 
-      <!-- Raporlar -->
-      <div
-        @click="goToDashboard"
-        class="group relative bg-gradient-to-br from-indigo-600/10 to-indigo-400/5 hover:from-indigo-500/20 hover:to-indigo-400/10 border border-indigo-400/30 rounded-2xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-indigo-500/20 cursor-pointer"
-      >
-        <div class="flex items-center justify-center w-16 h-16 bg-indigo-500/10 rounded-full mb-6 group-hover:bg-indigo-500/20 transition-all duration-300">
-          <ChartBarIcon class="w-8 h-8 text-indigo-400" />
-        </div>
-        <h2 class="text-2xl font-bold mb-2">Raporlar</h2>
-        <p class="text-gray-300 text-sm">Sistem istatistiklerini ve performans verilerini görüntüle.</p>
+        <!-- Raporlar -->
+        <button
+          type="button"
+          @click="goToDashboard"
+          class="card group text-left"
+        >
+          <div class="card-icon bg-indigo-500/10 border-indigo-400/20">
+            <ChartBarIcon class="w-6 h-6 text-indigo-300" />
+          </div>
+          <h2 class="card-title">Raporlar</h2>
+          <p class="card-desc">İstatistikler ve performans ekranı.</p>
+        </button>
       </div>
-
-    </div>
+    </main>
   </div>
 </template>
+
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -87,23 +88,42 @@ import {
   ChartBarIcon,
 } from '@heroicons/vue/24/outline'
 
-// ✅ Sayfa bilgisi
 definePageMeta({ layout: 'admin' })
 
 const router = useRouter()
 const { user } = useAuth()
 
-// ⏰ Canlı saat
+// Tarih & saat (sade)
+const currentDate = new Date().toLocaleDateString('tr-TR')
 const currentTime = ref('')
-const updateClock = () => {
-  const now = new Date()
-  currentTime.value = now.toLocaleTimeString('tr-TR', { hour12: false })
-}
+const tick = () => (currentTime.value = new Date().toLocaleTimeString('tr-TR', { hour12: false }))
+
 onMounted(() => {
-  updateClock()
-  setInterval(updateClock, 1000)
+  tick()
+  setInterval(tick, 1000)
 })
 
-// 📊 Rapor yönlendirmesi
 const goToDashboard = () => router.push('/admin/dashboard')
 </script>
+
+<style scoped>
+/* Minimal card set (sade, profesyonel) */
+.card {
+  @apply relative bg-slate-900/60 border border-slate-800 rounded-2xl p-6
+         hover:border-slate-700 hover:bg-slate-900/70 transition-colors
+         focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/40;
+}
+.card-icon {
+  @apply w-12 h-12 rounded-xl border flex items-center justify-center mb-4;
+}
+.card-title {
+  @apply text-lg font-semibold text-slate-100;
+}
+.card-desc {
+  @apply text-sm text-slate-400 mt-1;
+}
+.badge {
+  @apply absolute top-4 right-4 text-[10px] font-semibold bg-orange-500 text-white
+         px-2 py-0.5 rounded-full;
+}
+</style>
