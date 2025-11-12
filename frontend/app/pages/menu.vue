@@ -83,7 +83,7 @@ import { ref, onMounted } from 'vue'
 import useAuth from '../composables/useAuth'
 import protectUserPage from '../composables/protectUserPage'
 
-protectUserPage()
+await protectUserPage()
 
 const { user } = useAuth()
 const menu = ref(null)

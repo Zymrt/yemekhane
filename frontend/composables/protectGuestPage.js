@@ -1,14 +1,15 @@
 import { useRouter } from 'vue-router'
-import { useCookie } from '#app'
+import useAuth from './useAuth'
 
-export default function protectGuestPage() {
+export default async function protectGuestPage() {
   const router = useRouter()
-  const token = useCookie('token')
+  const { initAuth, isLoggedIn, isAdmin } = useAuth()
 
-  // Kullanıcı giriş yaptıysa anında yönlendir
-  if (token.value) {
-    // istersen burada role göre yönlendirme yapabiliriz
-    // örn: if (user.value.role === 'admin') router.push('/admin/onay')
-    router.push('/menu')
+  if (!process.client) return
+
+  await initAuth()
+
+  if (isLoggedIn.value) {
+    router.push(isAdmin.value ? '/admin/onay' : '/menu')
   }
 }

@@ -80,7 +80,7 @@ import useAuth from '../composables/useAuth'
 import protectGuestPage from '../composables/protectGuestPage'
 
 const { isLoggedIn } = useAuth()
-protectGuestPage()
+await protectGuestPage()
 </script>
 
 <style scoped>

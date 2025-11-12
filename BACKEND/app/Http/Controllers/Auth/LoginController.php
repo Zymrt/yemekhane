@@ -7,11 +7,14 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Tymon\JWTAuth\Facades\JWTAuth;
-use Exception;
+use App\Services\TokenService;
 
 class LoginController extends Controller
 {
+    public function __construct(protected TokenService $tokenService)
+    {
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -33,49 +36,34 @@ class LoginController extends Controller
             ]);
         }
 
-        // 🔐 Özel claim ekle
-        $customClaims = ['role' => $user->role];
-        $token = JWTAuth::claims($customClaims)->fromUser($user);
+        $sessionData = $this->tokenService->createSession($user, $request);
 
-        // 🍪 Cookie ayarları (localhost + 127.0.0.1 için uyumlu)
-        $cookie = cookie(
-            'token',
-            $token,
-            60 * 24,    // 1 gün
-            '/',        // path
-            null,       // domain = otomatik (localhost / 127.0.0.1 fark etmez)
-            false,      // secure = false (HTTP)
-            true,       // HttpOnly
-            false,
-            'Lax'
-        );
+        $accessCookie = $this->tokenService->makeAccessTokenCookie($sessionData['access_token']);
+        $refreshCookie = $this->tokenService->makeRefreshTokenCookie($sessionData['refresh_token']);
 
         return response()->json([
             'message' => 'Giriş başarılı.',
             'user' => $user->only('_id','name','surname','phone','unit','balance','role'),
-            'debug_token' => $token // geçici debug (istersen silebilirsin)
-        ])->withCookie($cookie);
+        ])->withCookie($accessCookie)->withCookie($refreshCookie);
     }
 
     public function logout(Request $request)
     {
-        try {
-            // 🔄 Cookie'deki token'ı oku
-            $token = $request->cookie('token') ?? JWTAuth::getToken();
+        $accessToken = $request->cookie('access_token') ?? $request->bearerToken();
+        $refreshToken = $request->cookie('refresh_token');
 
-            if ($token) {
-                JWTAuth::setToken($token)->invalidate(); // Token’ı geçersiz yap
-            }
-        } catch (Exception $e) {
-            // Sadece loglama amaçlı hata bastırma
-            \Log::warning('JWT logout hatası: ' . $e->getMessage());
+        $this->tokenService->revokeByTokens($accessToken, $refreshToken);
+
+        $forgetCookies = $this->tokenService->forgetCookies();
+
+        $response = response()->json([
+            'message' => 'Çıkış yapıldı.'
+        ]);
+
+        foreach ($forgetCookies as $cookie) {
+            $response->withCookie($cookie);
         }
 
-        // 🍪 Cookie’yi sıfırla
-        $forgetCookie = cookie()->forget('token');
-
-        return response()->json([
-            'message' => 'Çıkış yapıldı.'
-        ])->withCookie($forgetCookie);
+        return $response;
     }
 }

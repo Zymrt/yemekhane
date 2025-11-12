@@ -44,9 +44,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { Bar } from 'vue3-chart-v2' // ✅ düzeltildi
-import useAuth from '../composables/useAuth'
-
-const { token } = useAuth()
 const loading = ref(true)
 const error = ref(null)
 const menuStats = ref({ last7Days: {}, topItems: [] })
@@ -94,8 +91,8 @@ const topItems = computed(() => menuStats.value.topItems || [])
 
 onMounted(async () => {
   try {
-    const res = await $fetch('http://127.0.0.1:8000/api/admin/dashboard', {
-      headers: { Authorization: `Bearer ${token.value}` },
+    const res = await $fetch('/api/admin/dashboard', {
+      credentials: 'include',
     })
     menuStats.value = res.menuStats || {}
   } catch (err) {
