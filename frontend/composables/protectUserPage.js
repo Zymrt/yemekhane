@@ -1,12 +1,15 @@
 import { useRouter } from 'vue-router'
-import { useCookie } from '#app'
+import useAuth from './useAuth'
 
-export default function protectUserPage() {
+export default async function protectUserPage() {
   const router = useRouter()
-  const token = useCookie('token')
+  const { initAuth, isLoggedIn } = useAuth()
 
-  // Kullanıcı girişi yoksa login sayfasına yönlendir
-  if (!token.value) {
+  if (!process.client) return
+
+  await initAuth()
+
+  if (!isLoggedIn.value) {
     router.push('/login')
   }
 }

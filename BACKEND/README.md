@@ -1,66 +1,90 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Yemekhane Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Bu depo, belediye yemekhane otomasyonu için hazırlanan Laravel tabanlı REST API'yi içerir. Son değişikliklerle birlikte kimlik doğrulama yapısı JWT'den çerez tabanlı oturum jetonlarına taşındı. Aşağıdaki adımlar yeni sistemi yerel ortamınıza veya sunucunuza uygularken yol gösterecektir.
 
-## About Laravel
+## Gereksinimler
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.1+
+- Composer 2+
+- Node.js 18+ (ön-yapılandırılmış ön yüzü derlemek için)
+- MongoDB 5+ (kimlik doğrulama ve uygulama verileri için)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Kurulum
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. **Kaynak kodunu güncelleyin**
+   ```bash
+   git pull
+   ```
+2. **PHP bağımlılıklarını yükleyin**
+   ```bash
+   composer install
+   ```
+3. **Env dosyanızı oluşturun**
+   ```bash
+   cp .env.example .env
+   ```
+4. **Uygulama anahtarını üretin**
+   ```bash
+   php artisan key:generate
+   ```
+5. **MongoDB bağlantı ayarlarını yapın**
+   `.env` dosyanızda aşağıdaki alanları güncellediğinizden emin olun:
+   ```env
+   DB_CONNECTION=mongodb
+   DB_HOST=127.0.0.1
+   DB_PORT=27017
+   DB_DATABASE=belediye_yemekhane
+   DB_USERNAME= # gerekiyorsa doldurun
+   DB_PASSWORD= # gerekiyorsa doldurun
+   ```
+6. **Token sürelerini yapılandırın (isteğe bağlı)**
+   Yeni oturum sistemi `config/token.php` dosyasındaki TTL değerlerini kullanır. Varsayılanlar sizin için uygunsa değiştirmeniz gerekmez; aksi durumda `.env` dosyanıza aşağıdaki anahtarları ekleyin:
+   ```env
+   ACCESS_TOKEN_TTL=60    # dakika
+   REFRESH_TOKEN_TTL=7    # gün
+   ```
+7. **Önbellek temizleme**
+   ```bash
+   php artisan config:clear
+   php artisan cache:clear
+   ```
 
-## Learning Laravel
+## Yeni oturum sistemi nasıl çalışır?
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Giriş yapan her kullanıcı için MongoDB'de `session_tokens` koleksiyonunda bir kayıt oluşturulur.
+- Yanıtla birlikte tarayıcıya `access_token` ve `refresh_token` isimli HttpOnly çerezler gönderilir.
+- Her API isteği `token.auth` ara katmanıyla korunur ve çerezlerdeki jetonlar otomatik kontrol edilir.
+- `POST /api/refresh` uç noktası, kullanıcı etkileşimde olduğu sürece jetonları döndürür ve çerezleri yeniler.
+- Çıkış işlemi (`POST /api/logout`) hem veritabanı kaydını siler hem de çerezleri temizler.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Ön yüz (Nuxt) için yapılması gerekenler
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Tüm `fetch`/`$fetch` çağrılarının `credentials: 'include'` parametresiyle gönderildiğinden emin olun.
+- Sunucu tarafında CORS ayarlarına `Access-Control-Allow-Credentials: true` eklenmiş olmalıdır.
+- Tarayıcıda eski JWT kalıntılarını temizlemek için localStorage veya sessionStorage üzerinde saklanan `token` benzeri anahtarlar kaldırılmalıdır.
 
-## Laravel Sponsors
+## Sorun giderme
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+| Problem | Çözüm |
+| --- | --- |
+| Oturum açtıktan sonra çerezler oluşmuyor | Alan adınız HTTPS kullanmıyorsa `APP_URL` değerinin doğru olduğundan emin olun ve tarayıcı geliştirici araçlarında çerez engellerini kontrol edin. |
+| İstekler 401 dönüyor | `session_tokens` koleksiyonunda kaydın oluştuğunu doğrulayın ve istemci isteğinin çerez gönderdiğinden emin olun. |
+| TTL değerleri beklenenden kısa | `.env` dosyanızdaki `ACCESS_TOKEN_TTL` ve `REFRESH_TOKEN_TTL` değerlerini artırın ve `php artisan config:clear` çalıştırın. |
 
-### Premium Partners
+## Koleksiyon yönetimi
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+Yeni sisteme geçerken eski JWT tabanlı kayıtlarınızı temizlemek için MongoDB kabuğunda aşağıdaki komutu çalıştırabilirsiniz:
+```javascript
+use belediye_yemekhane;
+db.session_tokens.drop();
+```
+Bu komut mevcut oturumları siler; kullanıcılar yeniden giriş yapmak zorunda kalır.
 
-## Contributing
+## Testler
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Varsayılan Laravel testleri aşağıdaki komutla çalıştırılabilir:
+```bash
+php artisan test
+```
+(Çalıştırmadan önce `vendor/` bağımlılıklarının kurulu olduğundan emin olun.)
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

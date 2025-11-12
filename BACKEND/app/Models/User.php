@@ -3,12 +3,11 @@
 namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
-use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Model implements Authenticatable, JWTSubject
+class User extends Model implements Authenticatable
 {
     use AuthenticatableTrait, Notifiable;
 
@@ -44,15 +43,4 @@ class User extends Model implements Authenticatable, JWTSubject
      * @var array
      */
     protected $hidden = ['password'];
-
-    // JWTSubject için gerekli metodlar
-    public function getJWTIdentifier()
-    {
-        return $this->getKey();
-    }
-
-    public function getJWTCustomClaims()
-    {
-        return [];
-    }
 }
