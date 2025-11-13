@@ -26,7 +26,7 @@
         <img
           src="https://mezitli.bel.tr/wp-content/uploads/2020/07/mezbellogo-1.png"
           alt="Mezitli Belediyesi"
-          class="w-20 h-24 md:w-20 md:h-20 object-contain drop-shadow-lg hover:scale-110 transition-transform duration-300"
+          class="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-xl hover:scale-110 transition-transform duration-300"
         />
 
         <!-- Sağ slot butonları -->
@@ -37,10 +37,15 @@
 
       <!-- 🔹 Sağ: Çıkış Butonu -->
       <button
+        type="button"
         @click="handleLogout"
         class="btn btn-danger"
       >
-        Çıkış Yap
+        <span class="hidden sm:inline-flex items-center gap-2">
+          <span class="text-sm">🚪</span>
+          <span>Çıkış Yap</span>
+        </span>
+        <span class="sm:hidden">🚪</span>
       </button>
     </header>
 
@@ -72,7 +77,7 @@ const handleLogout = async () => {
 </script>
 
 <style>
-/* 🎨 Arka plan */
+/* 🎨 Arka plan animasyonu */
 @keyframes gradientMove {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -84,30 +89,77 @@ const handleLogout = async () => {
   animation: gradientMove 12s ease infinite;
 }
 
-/* 🔘 GLOBAL buton sistemi (slot içerisine düşen link/btn’ler için) */
+/* 🔘 GLOBAL cam buton sistemi */
 .btn {
-  @apply inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold transition
-         focus:outline-none focus:ring-2 focus:ring-offset-0 active:scale-[.99];
-}
-.btn-ghost {
-  @apply text-white/90 hover:text-white bg-white/0 hover:bg-white/10 border border-white/10;
-}
-.btn-outline {
-  @apply text-white border border-white/40 bg-transparent hover:bg-white/10;
-}
-.btn-primary {
-  @apply text-white bg-gradient-to-r from-orange-500 via-orange-500 to-orange-600
-         hover:brightness-110 shadow-md;
-}
-.btn-soft {
-  @apply text-sky-900 bg-white/70 hover:bg-white/90 border border-white/80 backdrop-blur-sm rounded-xl;
-}
-.btn-danger {
-  @apply text-white bg-red-500 hover:bg-red-600 shadow-md px-4 py-2 rounded-xl;
+  @apply inline-flex items-center justify-center gap-2
+         px-4 py-2 rounded-2xl font-semibold tracking-wide
+         transition duration-200 ease-out
+         focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70
+         active:scale-95
+         disabled:opacity-60 disabled:cursor-not-allowed
+         backdrop-blur-xl shadow-md border;
 }
 
-/* Mobilde butonları biraz küçültelim */
+/* Genel glass efekti */
+.btn:hover {
+  @apply translate-y-[1px] shadow-lg;
+}
+
+/* 🔹 Ghost – nav linkleri (ANA SAYFA, YORUMLAR vs.) */
+.btn-ghost {
+  @apply text-white/90
+         bg-white/10
+         border-white/30
+         hover:bg-white/20 hover:border-white/60;
+}
+
+/* 🔹 Outline – Hesap hareketleri gibi sekmeler */
+.btn-outline {
+  @apply text-white
+         bg-sky-500/10
+         border-sky-200/60
+         hover:bg-sky-500/25 hover:border-sky-100
+         shadow-sky-500/30;
+}
+
+/* 🔸 Primary – turuncu cam (istersen başka yerlerde kullanırsın) */
+.btn-primary {
+  @apply text-white
+         bg-orange-500/20
+         border-orange-300/70
+         hover:bg-orange-500/35
+         shadow-orange-500/40;
+}
+
+/* 🟢 Bakiye butonu – YEŞİL CAM + para efekti */
+.btn-balance {
+  @apply text-emerald-50
+         bg-emerald-500/25
+         border-emerald-300/80
+         hover:bg-emerald-500/40
+         shadow-emerald-500/50;
+  position: relative;
+}
+
+/* Tıklayınca para emojisi çıksın */
+.btn-balance:active::after {
+  content: " 💸";
+  position: relative;
+  top: 0;
+}
+
+/* 🔴 Danger – çıkış butonu */
+.btn-danger {
+  @apply text-white
+         bg-rose-500/25
+         border-rose-300/80
+         hover:bg-rose-500/40
+         shadow-rose-500/50
+         px-4 py-2 rounded-2xl;
+}
+
+/* Mobilde biraz küçültelim */
 @media (max-width: 768px) {
-  .btn { @apply text-sm px-3 py-2; }
+  .btn { @apply text-sm px-3 py-2 rounded-xl; }
 }
 </style>

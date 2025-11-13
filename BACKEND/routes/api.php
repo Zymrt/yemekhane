@@ -6,6 +6,10 @@ use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\Auth\RefreshController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\TransactionController; 
+use App\Http\Controllers\PaymentController; // 🌟 1. EKSİK IMPORT (ÖDEME) EKLENDİ
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -39,10 +43,44 @@ Route::get('/cookie-test', function (Request $request) {
 // --------------------------------------------------------
 // 🔒 KORUMALI ROTLAR (JWT GEREKTİRİR)
 // --------------------------------------------------------
+// (Senin middleware'in 'token.auth' imiş, 'auth:sanctum' değil)
 Route::middleware(['token.auth'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout']);
     Route::get('/user/profile', [UserController::class, 'getProfile']);
+    
+    // ESKİ MENÜ ROTASI (İstersen silebilirsin, yenisi 'reviews/today' oldu)
     Route::get('/menu/today', [MenuController::class, 'getTodayMenu']);
+
+    
+    // --------------------------------------------------------
+    // 🌟 YORUM SİSTEMİ ROTLARI
+    // --------------------------------------------------------
+    
+    // Ana sayfada menüyü VE yorum durumunu getiren rota
+    Route::get('/reviews/today', [ReviewController::class, 'today']);
+
+    // Kullanıcının yeni yorum göndermesi (puanlama) için rota
+    Route::post('/reviews', [ReviewController::class, 'store']);
+
+    // Kullanıcının "Değerlendirmelerim" sayfası için rota (/yorumlar linki)
+    Route::get('/reviews/my-reviews', [ReviewController::class, 'myReviews']);
+    
+    // --------------------------------------------------------
+    // 🌟 SATIN ALMA ROTASI
+    // --------------------------------------------------------
+    Route::post('/order/purchase', [OrderController::class, 'purchaseToday']);
+    
+    // --------------------------------------------------------
+    // 🌟 HESAP HAREKETLERİ ROTASI
+    // --------------------------------------------------------
+    Route::get('/transactions', [TransactionController::class, 'index']);
+    
+    // --------------------------------------------------------
+    // 🌟 2. ÖDEME SİSTEMİ (SİMÜLASYON) ROTASI EKLENDİ
+    // --------------------------------------------------------
+    Route::post('/payment/start', [PaymentController::class, 'startPayment']);
+    // --------------------------------------------------------
+
 
     // --------------------------------------------------------
     // 🧑‍💼 ADMİN ROTLARI
