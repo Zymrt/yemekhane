@@ -198,4 +198,30 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+    public function getUnitStats()
+    {
+        try {
+            // Tüm kullanıcıları çek (Sadece gerekli alanlar)
+            $users = User::all(['unit', 'balance']);
+
+            // Birimlere göre grupla
+            $stats = $users->groupBy('unit')->map(function ($group, $unitName) {
+                return [
+                    'unit' => $unitName ?: 'Birim Belirtilmemiş', // Boşsa isim ata
+                    'user_count' => $group->count(),
+                    'total_balance' => $group->sum('balance')
+                ];
+            })->values(); // Key'leri sıfırla, array yap
+
+            // Sıralama: En kalabalık birim en üstte olsun
+            $sortedStats = $stats->sortByDesc('user_count')->values();
+
+            return response()->json($sortedStats, 200);
+
+        } catch (\Throwable $e) {
+            \Log::error('Unit stats error: ' . $e->getMessage());
+            return response()->json(['error' => 'İstatistikler alınamadı.'], 500);
+        }
+    }
 }

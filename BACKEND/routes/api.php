@@ -85,6 +85,7 @@ Route::middleware(['token.auth'])->group(function () {
 
         // 📊 DASHBOARD RAPORLAR
         Route::get('/dashboard', [AdminController::class, 'getDashboardStats']);
+        Route::get('/stats/units', [AdminController::class, 'getUnitStats']);
 
         // Admin Cookie Test
         Route::get('/cookie-test', function (\Illuminate\Http\Request $request) {

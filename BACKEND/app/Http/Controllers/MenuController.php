@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Menu;
+use App\Models\Log; // 🌟 LOG MODELİ EKLENDİ
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use MongoDB\BSON\ObjectId;
@@ -21,10 +22,20 @@ class MenuController extends Controller
             'items.*.calorie' => 'nullable|numeric|min:0|max:5000',
         ]);
 
-        Menu::updateOrCreate(
+        $menu = Menu::updateOrCreate(
             ['date' => Carbon::parse($validated['date'])->startOfDay()],
             ['items' => $validated['items']]
         );
+
+        // 📝 LOG TUTMA: Menü Ekleme/Güncelleme
+        Log::create([
+            'user_id' => $request->user()->id ?? null,
+            'action' => 'Menü İşlemi',
+            'description' => "{$validated['date']} tarihi için menü oluşturuldu veya güncellendi.",
+            'type' => 'info',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+        ]);
 
         return response()->json(['message' => 'Menü başarıyla kaydedildi veya güncellendi.']);
     }
@@ -41,7 +52,7 @@ class MenuController extends Controller
     /**
      * Menü sil
      */
-    public function deleteMenu($id)
+    public function deleteMenu(Request $request, $id) // 🌟 Request parametresi eklendi (IP Logu için)
     {
         if (!$id || $id === 'undefined') {
             return response()->json(['message' => 'Geçersiz menü ID.'], 400);
@@ -54,7 +65,23 @@ class MenuController extends Controller
             return response()->json(['message' => 'Menü bulunamadı.'], 404);
         }
 
+        // Silinmeden önce tarihini alalım (Log mesajı için)
+        $menuDate = $menu->date instanceof \DateTime 
+            ? $menu->date->format('Y-m-d') 
+            : substr((string)$menu->date, 0, 10);
+
         $menu->delete();
+
+        // 📝 LOG TUTMA: Menü Silme
+        Log::create([
+            'user_id' => $request->user()->id ?? null,
+            'action' => 'Menü Silindi',
+            'description' => "{$menuDate} tarihli menü silindi.",
+            'type' => 'warning',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+        ]);
+
         return response()->json(['message' => 'Menü başarıyla silindi.']);
     }
 
@@ -85,6 +112,16 @@ class MenuController extends Controller
         $menu->items = $validated['items'];
         $menu->save();
 
+        // 📝 LOG TUTMA: Menü Güncelleme
+        Log::create([
+            'user_id' => $request->user()->id ?? null,
+            'action' => 'Menü Düzenlendi',
+            'description' => "{$validated['date']} tarihli menü içeriği güncellendi.",
+            'type' => 'info',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+        ]);
+
         return response()->json(['message' => 'Menü başarıyla güncellendi.']);
     }
 
@@ -93,7 +130,12 @@ class MenuController extends Controller
      */
     public function getTodayMenu()
     {
-        $menu = Menu::where('date', Carbon::today())->first();
+        // Saat dilimi sorunu yaşamamak için aralık sorgusu kullanıyoruz
+        $tz = config('app.timezone', 'Europe/Istanbul');
+        $start = Carbon::today($tz)->startOfDay();
+        $end   = Carbon::today($tz)->endOfDay();
+
+        $menu = Menu::whereBetween('date', [$start, $end])->first();
 
         if (!$menu) {
             return response()->json(['message' => 'Bugün için menü bulunamadı.'], 404);

@@ -43,7 +43,19 @@ class LoginController extends Controller
 
         return response()->json([
             'message' => 'Giriş başarılı.',
-            'user' => $user->only('_id','name','surname','phone','unit','balance','role'),
+            // 👇 DÜZELTME: 'meal_price' ve 'created_at' buraya eklendi.
+            // Giriş yapar yapmaz bu veriler artık frontend'e gidecek.
+            'user' => $user->only([
+                '_id',
+                'name',
+                'surname',
+                'phone',
+                'unit',
+                'balance',
+                'role',
+                'meal_price', // Eklendi
+                'created_at'  // Eklendi
+            ]),
         ])->withCookie($accessCookie)->withCookie($refreshCookie);
     }
 
