@@ -9,7 +9,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\TransactionController; 
-use App\Http\Controllers\PaymentController; // 🌟 1. EKSİK IMPORT (ÖDEME) EKLENDİ
+use App\Http\Controllers\PaymentController; 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -32,7 +32,7 @@ Route::post('/login', [LoginController::class, 'login']);
 // ✅ TOKEN YENİLEME (Cookie tabanlı)
 Route::post('/refresh', [RefreshController::class, 'refresh']);
 
-// 🔍 Cookie test (isteğe bağlı, dev/test için)
+// 🔍 Cookie test
 Route::get('/cookie-test', function (Request $request) {
     return response()->json([
         'access_token' => $request->cookie('access_token') ? '✅ Cookie alındı' : '❌ Cookie yok',
@@ -43,44 +43,26 @@ Route::get('/cookie-test', function (Request $request) {
 // --------------------------------------------------------
 // 🔒 KORUMALI ROTLAR (JWT GEREKTİRİR)
 // --------------------------------------------------------
-// (Senin middleware'in 'token.auth' imiş, 'auth:sanctum' değil)
 Route::middleware(['token.auth'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout']);
     Route::get('/user/profile', [UserController::class, 'getProfile']);
     
-    // ESKİ MENÜ ROTASI (İstersen silebilirsin, yenisi 'reviews/today' oldu)
+    // MENÜ
     Route::get('/menu/today', [MenuController::class, 'getTodayMenu']);
 
-    
-    // --------------------------------------------------------
-    // 🌟 YORUM SİSTEMİ ROTLARI
-    // --------------------------------------------------------
-    
-    // Ana sayfada menüyü VE yorum durumunu getiren rota
+    // YORUM SİSTEMİ
     Route::get('/reviews/today', [ReviewController::class, 'today']);
-
-    // Kullanıcının yeni yorum göndermesi (puanlama) için rota
     Route::post('/reviews', [ReviewController::class, 'store']);
-
-    // Kullanıcının "Değerlendirmelerim" sayfası için rota (/yorumlar linki)
     Route::get('/reviews/my-reviews', [ReviewController::class, 'myReviews']);
     
-    // --------------------------------------------------------
-    // 🌟 SATIN ALMA ROTASI
-    // --------------------------------------------------------
+    // SATIN ALMA
     Route::post('/order/purchase', [OrderController::class, 'purchaseToday']);
     
-    // --------------------------------------------------------
-    // 🌟 HESAP HAREKETLERİ ROTASI
-    // --------------------------------------------------------
+    // HESAP HAREKETLERİ
     Route::get('/transactions', [TransactionController::class, 'index']);
     
-    // --------------------------------------------------------
-    // 🌟 2. ÖDEME SİSTEMİ (SİMÜLASYON) ROTASI EKLENDİ
-    // --------------------------------------------------------
+    // ÖDEME SİSTEMİ
     Route::post('/payment/start', [PaymentController::class, 'startPayment']);
-    // --------------------------------------------------------
-
 
     // --------------------------------------------------------
     // 🧑‍💼 ADMİN ROTLARI
@@ -93,6 +75,9 @@ Route::middleware(['token.auth'])->group(function () {
         Route::put('/menu/{id}', [MenuController::class, 'updateMenu']);
 
         // 👥 KULLANICI YÖNETİMİ
+        // 👇 EKSİK OLAN ROTA BUYDU (Rapor sayfası için gerekli)
+        Route::get('/users', [AdminController::class, 'getAllUsers']);
+
         Route::get('/users/pending', [AdminController::class, 'getPendingUsers']);
         Route::get('/users/{userId}/document', [AdminController::class, 'downloadDocument']);
         Route::post('/users/{userId}/approve', [AdminController::class, 'approveUser']);
@@ -101,11 +86,12 @@ Route::middleware(['token.auth'])->group(function () {
         // 📊 DASHBOARD RAPORLAR
         Route::get('/dashboard', [AdminController::class, 'getDashboardStats']);
 
+        // Admin Cookie Test
         Route::get('/cookie-test', function (\Illuminate\Http\Request $request) {
-    return response()->json([
-        'access_token' => $request->cookie('access_token') ? '✅ Cookie alındı' : '❌ Cookie yok',
-        'refresh_token' => $request->cookie('refresh_token') ? '✅ Cookie alındı' : '❌ Cookie yok',
-    ]);
-});
+            return response()->json([
+                'access_token' => $request->cookie('access_token') ? '✅ Cookie alındı' : '❌ Cookie yok',
+                'refresh_token' => $request->cookie('refresh_token') ? '✅ Cookie alındı' : '❌ Cookie yok',
+            ]);
+        });
     });
 });

@@ -20,6 +20,7 @@ export default function useAuth() {
 
   // ♻️ Otomatik token yenileme döngüsü
   const startRefreshCycle = () => {
+    if (!process.client) return          // 🔹 SSR'de interval başlatma
     if (refreshTimer.value) clearInterval(refreshTimer.value)
 
     refreshTimer.value = setInterval(async () => {
@@ -51,7 +52,7 @@ export default function useAuth() {
     if (refreshTimer.value) clearInterval(refreshTimer.value)
     refreshTimer.value = null
 
-    if (redirect) await navigateTo('/login')
+    if (redirect && process.client) await navigateTo('/login')
   }
 
   // 🔐 Giriş fonksiyonu
@@ -73,12 +74,21 @@ export default function useAuth() {
     }
   }
 
-  // 🧠 Oturum doğrulama (uygulama açılışında)
+  // 🧠 Oturum doğrulama (uygulama açılışında / refresh'te)
   const initAuth = async () => {
-    if (!process.client || initialized.value) return
+    // Zaten initialize olduysa tekrar çalışma
+    if (initialized.value) return
 
     try {
-      const res = await $fetch('/api/user/profile', { credentials: 'include' })
+      // 🚀 KRİTİK DÜZELTME BURADA:
+      // SSR sırasında (Sayfa F5 yapıldığında), tarayıcıdan gelen cookie'leri
+      // yakalayıp Laravel API isteğine eklememiz lazım.
+      const headers = useRequestHeaders(['cookie'])
+
+      const res = await $fetch('/api/user/profile', {
+        headers: headers // <--- Cookie'yi API'ye taşıyan sihirli kısım
+      })
+
       user.value = res.user
       startRefreshCycle()
       console.log('✅ Aktif oturum doğrulandı.')

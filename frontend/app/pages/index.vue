@@ -46,7 +46,7 @@
           <div class="mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 animate-fadeInUp [animation-delay:220ms]">
             <NuxtLink
               to="/login"
-              class="cta-btn btn-primary"
+              class="cta-btn btn-secondary"
             >
               <span class="relative z-10">Giriş Yap</span>
               <span class="btn-shine" aria-hidden="true"></span>

@@ -11,6 +11,9 @@ use Illuminate\Support\Carbon;
 
 class AdminController extends Controller
 {
+    /**
+     * 📋 Onay bekleyen kullanıcıları getirir
+     */
     public function getPendingUsers()
     {
         $pendingUsers = User::where('status', 'pending')
@@ -18,6 +21,28 @@ class AdminController extends Controller
             ->get();
 
         return response()->json($pendingUsers, Response::HTTP_OK);
+    }
+
+    /**
+     * 👥 TÜM KULLANICILARI GETİRİR
+     */
+    public function getAllUsers()
+    {
+        $users = User::orderBy('created_at', 'desc')->get([
+            '_id',
+            'name',
+            'surname',
+            'email',
+            'phone',
+            'unit',
+            'balance',
+            'meal_price',
+            'role',
+            'status',
+            'created_at'
+        ]);
+
+        return response()->json($users, Response::HTTP_OK);
     }
 
     public function downloadDocument($userId)
@@ -69,103 +94,108 @@ class AdminController extends Controller
      * 📊 Yönetim Dashboard istatistikleri
      */
     public function getDashboardStats(Request $request)
-{
-    try {
-        // 🧩 Kullanıcı istatistikleri
-        $totalUsers = User::count();
-        $pendingUsers = User::where('status', 'pending')->count();
-        $approvedUsers = User::where('status', 'approved')->count();
+    {
+        try {
+            // 🕒 SAAT DİLİMİ VE GÜN AYARLARI (ReviewController ile aynı mantık)
+            $tz = config('app.timezone', 'Europe/Istanbul');
+            $startOfDay = Carbon::today($tz)->startOfDay();
+            $endOfDay   = Carbon::today($tz)->endOfDay();
 
-        // 📅 Bugünün tarihi (string olarak)
-        $today = now()->toDateString();
+            // 🧩 Kullanıcı istatistikleri
+            $totalUsers = User::count();
+            $pendingUsers = User::where('status', 'pending')->count();
+            $approvedUsers = User::where('status', 'approved')->count();
 
-        // 🍽 Menü istatistikleri
-        $totalMenus = Menu::count();
-        $todayMenu = Menu::where('date', $today)->first(); // ✅ Mongo için doğrudan string karşılaştırma
+            // 🍽 Menü istatistikleri
+            $totalMenus = Menu::count();
+            
+            // ✅ DÜZELTME: Basit string eşleşmesi yerine tarih aralığı kullanıyoruz.
+            // Bu yöntem veritabanındaki tarih formatı ne olursa olsun bugünü yakalar.
+            $todayMenu = Menu::whereBetween('date', [$startOfDay, $endOfDay])->first();
 
-        // 📆 Son 7 gün
-        $startDate = now()->subDays(6)->toDateString();
-        $menusLast7 = Menu::where('date', '>=', $startDate)->get(['date']);
+            // 📆 Son 7 gün
+            $startLast7 = Carbon::today($tz)->subDays(6)->startOfDay();
+            $menusLast7 = Menu::where('date', '>=', $startLast7)->get(['date']);
 
-        $last7Data = [];
-        for ($i = 0; $i < 7; $i++) {
-            $day = now()->subDays(6 - $i)->toDateString();
-            $last7Data[$day] = 0;
-        }
-
-        foreach ($menusLast7 as $menu) {
-            $menuDate = is_string($menu->date)
-                ? $menu->date
-                : (string) \Carbon\Carbon::parse($menu->date)->toDateString();
-
-            if (isset($last7Data[$menuDate])) {
-                $last7Data[$menuDate]++;
+            $last7Data = [];
+            for ($i = 0; $i < 7; $i++) {
+                $day = Carbon::today($tz)->subDays(6 - $i)->toDateString();
+                $last7Data[$day] = 0;
             }
-        }
 
-        // 📊 Aylık veri hesaplama (manuel)
-        $menus = Menu::all(['date']);
-        $monthlyData = [];
+            foreach ($menusLast7 as $menu) {
+                // Tarihi güvenli bir şekilde string'e çevir
+                $menuDate = $menu->date instanceof \DateTime 
+                    ? $menu->date->format('Y-m-d') 
+                    : (string) substr((string)$menu->date, 0, 10);
 
-        foreach ($menus as $menu) {
-            $menuDate = is_string($menu->date)
-                ? $menu->date
-                : (string) \Carbon\Carbon::parse($menu->date)->toDateString();
-
-            $monthKey = substr($menuDate, 0, 7); // YYYY-MM formatı
-            $monthlyData[$monthKey] = ($monthlyData[$monthKey] ?? 0) + 1;
-        }
-
-        $monthlyData = collect($monthlyData)->map(function ($count, $month) {
-            return [
-                'month' => $month,
-                'count' => $count
-            ];
-        })->values();
-
-        // 🍛 Son 30 günün popüler menüleri
-        $since30 = now()->subDays(30)->toDateString();
-        $recentMenus = Menu::where('date', '>=', $since30)->get(['items']);
-
-        $itemFrequency = [];
-        foreach ($recentMenus as $menu) {
-            foreach ($menu->items ?? [] as $item) {
-                $name = trim($item['name'] ?? '');
-                if ($name === '') continue;
-                $itemFrequency[$name] = ($itemFrequency[$name] ?? 0) + 1;
+                if (isset($last7Data[$menuDate])) {
+                    $last7Data[$menuDate]++;
+                }
             }
-        }
 
-        arsort($itemFrequency);
-        $topItems = [];
-        foreach (array_slice($itemFrequency, 0, 8, true) as $name => $count) {
-            $topItems[] = ['name' => $name, 'count' => $count];
-        }
+            // 📊 Aylık veri hesaplama
+            // Tüm menüleri çekip PHP tarafında gruplamak yerine, son 1 yıl vs alınabilir ama şimdilik tümü kalsın.
+            $menus = Menu::all(['date']);
+            $monthlyData = [];
 
-        // 🎯 JSON cevabı
-        return response()->json([
-            'userStats' => [
-                'total' => $totalUsers,
-                'pending' => $pendingUsers,
-                'approved' => $approvedUsers,
-            ],
-            'menuStats' => [
-                'total' => $totalMenus,
-                'today' => $todayMenu,
-                'last7Days' => $last7Data,
-                'byMonth' => $monthlyData,
-                'topItems' => $topItems,
-            ],
-        ], 200);
-    } catch (\Throwable $e) {
-        // ❌ Hata durumunda log ve JSON hata cevabı
-        \Log::error('Dashboard error: ' . $e->getMessage());
-        return response()->json([
-            'error' => $e->getMessage(),
-            'line' => $e->getLine(),
-            'file' => $e->getFile(),
-        ], 500);
+            foreach ($menus as $menu) {
+                $menuDate = $menu->date instanceof \DateTime 
+                    ? $menu->date->format('Y-m-d') 
+                    : (string) substr((string)$menu->date, 0, 10);
+
+                $monthKey = substr($menuDate, 0, 7); // YYYY-MM
+                $monthlyData[$monthKey] = ($monthlyData[$monthKey] ?? 0) + 1;
+            }
+
+            $monthlyData = collect($monthlyData)->map(function ($count, $month) {
+                return [
+                    'month' => $month,
+                    'count' => $count
+                ];
+            })->values();
+
+            // 🍛 Son 30 günün popüler menüleri
+            $since30 = Carbon::today($tz)->subDays(30)->startOfDay();
+            $recentMenus = Menu::where('date', '>=', $since30)->get(['items']);
+
+            $itemFrequency = [];
+            foreach ($recentMenus as $menu) {
+                foreach ($menu->items ?? [] as $item) {
+                    $name = trim($item['name'] ?? '');
+                    if ($name === '') continue;
+                    $itemFrequency[$name] = ($itemFrequency[$name] ?? 0) + 1;
+                }
+            }
+
+            arsort($itemFrequency);
+            $topItems = [];
+            foreach (array_slice($itemFrequency, 0, 8, true) as $name => $count) {
+                $topItems[] = ['name' => $name, 'count' => $count];
+            }
+
+            // 🎯 JSON cevabı
+            return response()->json([
+                'userStats' => [
+                    'total' => $totalUsers,
+                    'pending' => $pendingUsers,
+                    'approved' => $approvedUsers,
+                ],
+                'menuStats' => [
+                    'total' => $totalMenus,
+                    'today' => $todayMenu, // Artık nesne dönecek, frontend true/false kontrolü yapabilir
+                    'last7Days' => $last7Data,
+                    'byMonth' => $monthlyData,
+                    'topItems' => $topItems,
+                ],
+            ], 200);
+        } catch (\Throwable $e) {
+            \Log::error('Dashboard error: ' . $e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ], 500);
+        }
     }
-}
-
 }

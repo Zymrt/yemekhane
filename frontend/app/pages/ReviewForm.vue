@@ -6,6 +6,12 @@
       İşleniyor...
     </div>
 
+    <div v-else-if="!isTimeAllowed" class="text-center py-6 bg-yellow-50 rounded-lg border border-yellow-100">
+      <div class="text-4xl mb-2">🕒</div>
+      <p class="text-yellow-800 font-medium">Değerlendirme saati henüz gelmedi.</p>
+      <p class="text-yellow-600 text-sm mt-1">Yorum yapabilmek için saat 12:00'den sonra tekrar deneyin.</p>
+    </div>
+
     <div v-else-if="isSuccess" class="text-center py-4 text-green-600 font-medium">
       <div class="text-4xl mb-2">✅</div>
       Değerli yorumunuz için teşekkürler!
@@ -61,7 +67,6 @@
 </template>
 
 <script setup>
-// Parent sayfadan (menu.vue) menü ID'sini alıyoruz
 const props = defineProps({
   menuId: {
     type: String,
@@ -70,17 +75,42 @@ const props = defineProps({
 });
 
 const form = reactive({
-  rating: 5, // Varsayılan 5 yıldız
+  rating: 5,
   comment: ''
 });
 
 const loading = ref(false);
 const isSuccess = ref(false);
 const errorMessage = ref('');
+const isTimeAllowed = ref(false); // Saat kontrolü değişkeni
 
-// Nuxt'ın kendi fetch hook'unu veya axios kullanabilirsin. 
-// Burada useFetch veya $fetch örneği yapıyorum (Nuxt 3 standardı)
+onMounted(() => {
+  checkTime();
+});
+
+// Saati kontrol eden fonksiyon
+function checkTime() {
+  const now = new Date();
+  const currentHour = now.getHours();
+  
+  // Eğer saat 12 ve üzeriyse izin ver (12:00, 13:00 vs.)
+  if (currentHour >= 12) {
+    isTimeAllowed.value = true;
+  } else {
+    isTimeAllowed.value = false;
+  }
+  
+  // Test etmek için (Gece yarısı kodluyorsan 12 yerine 0 yapabilirsin):
+  // isTimeAllowed.value = true; 
+}
+
 async function submitReview() {
+  // Frontend'de de ekstra güvenlik: Saat 12'den önceyse gönderme
+  if (!isTimeAllowed.value) {
+    errorMessage.value = "Henüz değerlendirme saati gelmedi.";
+    return;
+  }
+
   loading.value = true;
   errorMessage.value = '';
 
@@ -91,15 +121,10 @@ async function submitReview() {
         menu_id: props.menuId,
         rating: form.rating,
         comment: form.comment
-      },
-      // Backend'e auth token gönderdiğinden emin ol (otomatik gidiyorsa sorun yok)
-      headers: {
-        // 'Authorization': `Bearer ${token}` // Eğer manuel ekliyorsan burayı aç
       }
     });
 
     if (error.value) {
-      // Backend'den dönen hata mesajını göster (örn: "Satın almadınız")
       errorMessage.value = error.value.data?.message || 'Bir hata oluştu.';
     } else {
       isSuccess.value = true;

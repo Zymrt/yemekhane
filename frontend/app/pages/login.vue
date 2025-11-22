@@ -66,30 +66,41 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRoute } from 'vue-router' // 🔹 redirect query'si için
 import useAuth from '../composables/useAuth'
 
+const route = useRoute()
 const { user, login } = useAuth()
 
 const phone = ref('')
 const password = ref('')
 const loading = ref(false)
-const error = ref(null) // ⚠️ JS-safe (TS generic yok)
+const error = ref(null)
 const showPassword = ref(false)
 
 const handleLogin = async () => {
   loading.value = true
   error.value = null
+
   try {
     const ok = await login({ phone: phone.value, password: password.value })
-    if (ok) {
-      if (user.value?.role === 'admin') {
-        await navigateTo('/admin')
-      } else {
-        await navigateTo('/menu')
-      }
-    } else {
+
+    if (!ok) {
       error.value = 'Telefon veya şifre hatalı.'
+      return
     }
+
+    // 🔁 Eğer URL'de redirect query'si varsa önce onu kullan
+    const redirectParam = route.query.redirect
+    const redirectPath = typeof redirectParam === 'string' ? redirectParam : null
+
+    // 🎯 Hedef:
+    // 1) redirect varsa → oraya
+    // 2) yoksa → role admin ise /admin, değilse /menu
+    const fallbackPath = user.value?.role === 'admin' ? '/admin' : '/menu'
+    const target = redirectPath || fallbackPath
+
+    await navigateTo(target)
   } catch (err) {
     console.error('Login Hatası:', err)
     error.value = 'Sunucuya bağlanılamadı veya hata oluştu.'
@@ -98,6 +109,7 @@ const handleLogin = async () => {
   }
 }
 </script>
+
 
 <style scoped>
 @keyframes bgShift { 0%{transform:translateY(0) scale(1);} 50%{transform:translateY(-2%) scale(1.02);} 100%{transform:translateY(0) scale(1);} }

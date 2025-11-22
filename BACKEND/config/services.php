@@ -31,4 +31,7 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'review' => [
+    'start_time' => env('REVIEW_START_TIME', '12:00'),
+],
 ];
