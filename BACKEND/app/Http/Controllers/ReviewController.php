@@ -14,29 +14,47 @@ use App\Models\Review;
 class ReviewController extends Controller
 {
     /**
+     * Uygulamada yorum saatini ve timezone'u tek yerden yönetelim.
+     */
+    private string $tz = 'Europe/Istanbul';
+
+    /**
      * Helper: Yorum başlangıç saatini getirir.
-     * config/services.php içine eklediğini varsayıyorum, yoksa env() kalabilir ama cache'de dikkat et.
+     * config/services.php içine şu şekilde ekleyebilirsin:
+     *
+     * 'review' => [
+     *     'start_time' => env('REVIEW_START_TIME', '12:00'),
+     * ],
      */
     private function getStartTime()
     {
-        // Güvenli yöntem: config üzerinden okumak
         return config('services.review.start_time', env('REVIEW_START_TIME', '12:00'));
+    }
+
+    private function nowTz(): Carbon
+    {
+        return Carbon::now($this->tz);
+    }
+
+    private function todayTz(): Carbon
+    {
+        return Carbon::today($this->tz);
     }
 
     private function reviewStartAt(): Carbon
     {
-        $tz   = config('app.timezone', 'Europe/Istanbul');
-        $when = $this->getStartTime();
+        $when = $this->getStartTime(); // Örn: "12:00"
         [$hh, $mm] = array_pad(explode(':', $when, 2), 2, '0');
-        return Carbon::today($tz)->setTime((int)$hh, (int)$mm);
+
+        return $this->todayTz()->setTime((int) $hh, (int) $mm);
     }
 
     private function todayBounds(): array
     {
-        $tz = config('app.timezone', 'Europe/Istanbul');
-        $start = Carbon::today($tz)->startOfDay();
-        $end   = Carbon::today($tz)->endOfDay();
-        return [$start, $end, $tz];
+        $start = $this->todayTz()->startOfDay();
+        $end   = $this->todayTz()->endOfDay();
+
+        return [$start, $end, $this->tz];
     }
 
     // GET /api/reviews/today
@@ -59,6 +77,7 @@ class ReviewController extends Controller
                 'after_start'      => false,
                 'has_order'        => false,
                 'review_start_raw' => $this->getStartTime(),
+                'now_tz'           => $this->nowTz()->toDateTimeString(), // debug için
             ]);
         }
 
@@ -69,8 +88,8 @@ class ReviewController extends Controller
             ->whereBetween('date', [$startDay, $endDay])
             ->exists();
 
-        // Saat kontrolü
-        $afterStart = Carbon::now($tz)->gte($this->reviewStartAt());
+        // Saat kontrolü (Türkiye saati)
+        $afterStart = $this->nowTz()->gte($this->reviewStartAt());
 
         // Zaten yorum yapmış mı?
         $existing = Review::where('user_id', (string)($user->_id ?? $user->id))
@@ -82,13 +101,13 @@ class ReviewController extends Controller
         $agg = Review::where('menu_id', $menuId)
             ->whereBetween('date', [$startDay, $endDay])
             ->get(['rating']);
-        
+
         $count = $agg->count();
         $avg   = $count ? round($agg->avg('rating'), 2) : null;
 
         return response()->json([
             'menu'             => $menu,
-            'can_review'       => ($hasOrder && $afterStart && !$existing), // Frontend için kritik bilgi
+            'can_review'       => ($hasOrder && $afterStart && !$existing),
             'already'          => (bool)$existing,
             'avg'              => $avg,
             'count'            => $count,
@@ -96,6 +115,7 @@ class ReviewController extends Controller
             'after_start'      => $afterStart,
             'has_order'        => $hasOrder,
             'review_start_raw' => $this->getStartTime(),
+            'now_tz'           => $this->nowTz()->toDateTimeString(), // debug için frontendten görebilirsin
         ]);
     }
 
@@ -124,14 +144,16 @@ class ReviewController extends Controller
         }
         $menuId = (string) ($menu->_id ?? $menu->id);
 
-        // 🛡️ GÜVENLİK DUVARI: Saat Kontrolü
-        if (!Carbon::now($tz)->gte($this->reviewStartAt())) {
+        // 🛡️ SAAT KONTROLÜ – HER ZAMAN TÜRKİYE SAATİ
+        if (!$this->nowTz()->gte($this->reviewStartAt())) {
             return response()->json([
-                'message' => 'Yorumlar saat ' . $this->getStartTime() . ' itibarıyla açılacaktır.'
+                'message'    => 'Yorumlar saat ' . $this->getStartTime() . ' itibarıyla açılacaktır.',
+                'now_tz'     => $this->nowTz()->toDateTimeString(),      // debug
+                'start_time' => $this->reviewStartAt()->toDateTimeString(), // debug
             ], 422);
         }
 
-        // 🛡️ GÜVENLİK DUVARI: Satın Alma Kontrolü
+        // 🛡️ SATIN ALMA KONTROLÜ
         $hasOrder = Order::where('user_id', (string)($user->_id ?? $user->id))
             ->whereBetween('date', [$startDay, $endDay])
             ->exists();
@@ -145,7 +167,7 @@ class ReviewController extends Controller
             [
                 'user_id' => (string)($user->_id ?? $user->id),
                 'menu_id' => $menuId,
-                'date'    => $startDay, 
+                'date'    => $startDay,
             ],
             [
                 'rating'  => (int)$data['rating'],
@@ -185,7 +207,6 @@ class ReviewController extends Controller
 
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
-        // ID'leri topla
         $menuIds = collect($paginator->items())
             ->pluck('menu_id')
             ->filter()
@@ -194,8 +215,6 @@ class ReviewController extends Controller
             ->values()
             ->all();
 
-        // Menü detaylarını al (ObjectId dönüşümü gerekebilir, burası MongoDB configine göre değişir ama genelde string çalışır)
-        // Eğer çalışmazsa burada whereIn içinde cleanObjectId kullanmak gerekebilir.
         $menus = Menu::whereIn('_id', $menuIds)->get()->keyBy(function ($m) {
             return (string) ($m->_id ?? $m->id);
         });
@@ -211,7 +230,7 @@ class ReviewController extends Controller
                 'menu'       => $menu ? [
                     'id'    => (string) ($menu->_id ?? $menu->id),
                     'date'  => optional($menu->date)->toISOString() ?? (string)($menu->date ?? ''),
-                    'items' => $menu->items ?? null, // Menü içeriği (Çorba, Pilav vs.)
+                    'items' => $menu->items ?? null,
                 ] : null,
             ];
         })->values();

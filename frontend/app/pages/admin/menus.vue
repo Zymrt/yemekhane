@@ -1,109 +1,140 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white px-6 py-10">
+  <div class="max-w-[1600px] mx-auto animate-fade-in">
+    
     <!-- HEADER -->
-    <header class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between mb-10 gap-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
       <div>
-        <h1 class="text-4xl font-extrabold text-white flex items-center gap-2 drop-shadow-lg">
-          <i class="i-lucide-clipboard-list text-orange-400 text-5xl"></i> Tüm Menüler
+        <h1 class="text-3xl font-bold text-white flex items-center gap-3">
+          <span class="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-400">
+            <ClipboardDocumentCheckIcon class="w-8 h-8" />
+          </span>
+          Menü Geçmişi
         </h1>
-        <NuxtLink
-          to="/admin"
-          class="text-sm text-orange-300 hover:text-orange-400 mt-1 inline-block transition"
-        >
-          ← Admin Paneline Geri Dön
+        <p class="text-slate-400 mt-2 ml-1">Sisteme girilmiş tüm menü kayıtlarını inceleyin ve düzenleyin.</p>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <div class="px-4 py-2 bg-[#121212]/80 border border-white/10 rounded-xl text-sm text-slate-300 backdrop-blur-md">
+          Toplam Kayıt: <span class="text-indigo-400 font-bold ml-1">{{ menus.length }}</span>
+        </div>
+        <NuxtLink to="/admin" class="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm hover:bg-white/10 transition flex items-center gap-2 text-slate-300">
+          <ArrowLeftIcon class="w-4 h-4" /> Menüye Dön
         </NuxtLink>
       </div>
-
-      <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-5 py-3 shadow-md text-sm">
-        <span class="text-gray-300">📅 Toplam Menü: </span>
-        <span class="font-semibold text-white">{{ menus.length }}</span>
-      </div>
-    </header>
-
-    <!-- MENÜLER -->
-    <div class="max-w-7xl mx-auto">
-      <div v-if="loading" class="text-gray-300">Yükleniyor...</div>
-      <div v-else-if="error" class="text-red-400">{{ error }}</div>
-      <div v-else-if="menus.length === 0" class="text-gray-400 text-lg">Henüz eklenmiş menü bulunamadı.</div>
-
-      <transition-group name="fade" tag="div" class="space-y-6">
-        <div
-          v-for="(menu, idx) in menus"
-          :key="idOf(menu) || idx"
-          class="bg-white/10 border border-white/20 rounded-2xl shadow-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] transition p-6 backdrop-blur-md"
-        >
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-              <i class="i-lucide-calendar text-orange-300"></i>
-              {{ formatDate(menu.date) }}
-            </h2>
-
-            <div class="flex gap-3">
-              <button
-                @click="confirmDelete(idOf(menu))"
-                class="px-4 py-2 rounded-lg border border-red-500/50 text-red-300 hover:bg-red-500/30 hover:text-white transition"
-              >
-                Sil
-              </button>
-              <NuxtLink
-                :to="{ name: 'admin-edit-menu', query: { id: idOf(menu) } }"
-                class="px-4 py-2 rounded-lg border border-sky-400/50 text-sky-300 hover:bg-sky-400/30 hover:text-white transition"
-              >
-                Düzenle
-              </NuxtLink>
-            </div>
-          </div>
-
-          <ul class="list-disc list-inside text-gray-200 space-y-1">
-            <li v-for="(item, i) in menu.items" :key="i">
-              <span class="font-medium">{{ item.name }}</span>
-              <span v-if="item.calorie" class="text-gray-400 text-sm"> — {{ item.calorie }} kcal</span>
-            </li>
-          </ul>
-        </div>
-      </transition-group>
     </div>
 
-    <!-- POPUP -->
-    <transition name="fade">
+    <!-- YÜKLENİYOR -->
+    <div v-if="loading" class="flex flex-col items-center justify-center py-20">
+      <div class="w-10 h-10 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+      <p class="text-slate-500 mt-4 text-sm">Menüler yükleniyor...</p>
+    </div>
+
+    <!-- BOŞ DURUM -->
+    <div v-else-if="menus.length === 0" class="flex flex-col items-center justify-center py-20 bg-[#121212]/40 rounded-3xl border border-dashed border-white/10 text-slate-500">
+       <ClipboardDocumentListIcon class="w-16 h-16 mb-4 opacity-20" />
+       <p>Henüz eklenmiş menü bulunamadı.</p>
+    </div>
+
+    <!-- MENÜ LİSTESİ (GRID) -->
+    <transition-group v-else name="list" tag="div" class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
       <div
-        v-if="showPopup"
-        class="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50"
+        v-for="(menu, idx) in menus"
+        :key="idOf(menu) || idx"
+        class="group relative bg-[#121212]/60 border border-white/5 rounded-3xl p-6 flex flex-col hover:border-indigo-500/30 hover:shadow-[0_0_30px_rgba(99,102,241,0.1)] transition-all duration-300 backdrop-blur-sm"
       >
-        <div
-          class="bg-gray-900/90 border border-white/10 rounded-2xl px-10 py-8 shadow-2xl text-center animate-popup max-w-md w-full"
-        >
-          <h2 class="text-2xl font-bold mb-6 text-white">Bu menüyü silmek istediğine emin misin?</h2>
-          <div class="flex justify-center gap-4">
-            <button
-              @click="deleteMenu(selectedId)"
-              class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-md transition"
-            >
-              Evet, Sil
-            </button>
-            <button
+        <!-- Kart Başlığı -->
+        <div class="flex justify-between items-start mb-6 border-b border-white/5 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
+              <CalendarIcon class="w-6 h-6" />
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
+                {{ formatDate(menu.date) }}
+              </h2>
+              <p class="text-xs text-slate-500 uppercase tracking-wider font-mono mt-0.5">
+                {{ new Date(menu.date).toLocaleDateString('tr-TR', { weekday: 'long' }) }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Yemek Listesi -->
+        <div class="flex-1 space-y-3 mb-6">
+          <div v-for="(item, i) in menu.items" :key="i" class="flex justify-between items-start text-sm">
+            <span class="text-slate-300 font-medium leading-relaxed">{{ item.name }}</span>
+            <span v-if="item.calorie" class="text-[10px] bg-white/5 px-1.5 py-0.5 rounded text-slate-500 font-mono whitespace-nowrap ml-2">
+              {{ item.calorie }} kcal
+            </span>
+          </div>
+        </div>
+
+        <!-- Aksiyon Butonları -->
+        <div class="flex gap-3 mt-auto pt-4 border-t border-white/5">
+          <NuxtLink
+            :to="{ name: 'admin-edit-menu', query: { id: idOf(menu) } }"
+            class="flex-1 px-3 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 transition flex items-center justify-center gap-2 text-xs font-bold"
+          >
+            <PencilSquareIcon class="w-4 h-4" /> Düzenle
+          </NuxtLink>
+
+          <button
+            @click="confirmDelete(idOf(menu))"
+            class="px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 transition flex items-center justify-center"
+            title="Sil"
+          >
+            <TrashIcon class="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </transition-group>
+
+    <!-- SİLME POPUP (MODERN) -->
+    <transition name="pop">
+      <div v-if="showPopup" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 p-4">
+        <div class="bg-[#1a1a1a] border border-red-500/30 rounded-3xl p-8 shadow-2xl text-center max-w-sm w-full relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-orange-500 to-red-500"></div>
+          
+          <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-red-400 border border-red-500/20">
+            <TrashIcon class="w-8 h-8" />
+          </div>
+          
+          <h2 class="text-xl font-bold text-white mb-2">Menüyü Sil?</h2>
+          <p class="text-slate-400 text-sm mb-6">Bu işlem geri alınamaz. Seçilen tarihe ait menü kalıcı olarak silinecektir.</p>
+          
+          <div class="flex gap-3">
+            <button 
               @click="showPopup = false"
-              class="px-6 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 text-gray-200"
+              class="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 rounded-xl transition text-sm font-medium"
             >
               Vazgeç
+            </button>
+            <button 
+              @click="deleteMenu(selectedId)"
+              class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl transition text-sm font-bold shadow-lg shadow-red-900/20"
+            >
+              Evet, Sil
             </button>
           </div>
         </div>
       </div>
     </transition>
+
   </div>
 </template>
+
 <script setup>
 import { ref, onMounted } from 'vue'
 import useAuth from '../composables/useAuth'
+import { 
+  ClipboardDocumentCheckIcon, ClipboardDocumentListIcon, ArrowLeftIcon, 
+  CalendarIcon, PencilSquareIcon, TrashIcon 
+} from '@heroicons/vue/24/outline'
 
 definePageMeta({ layout: 'admin' })
 
-
-
-// ESKİ HALİ: const API_BASE = 'http://127.0.0.1:8000/api/admin/menu'
-const API_BASE = '/api/admin/menu' // YENİ HALİ (Proxy için)
-// ----------------------------------------------------
+const API_BASE = '/api/admin/menu'
+const { logout } = useAuth()
 
 const menus = ref([])
 const loading = ref(true)
@@ -111,7 +142,7 @@ const error = ref(null)
 const showPopup = ref(false)
 const selectedId = ref(null)
 
-// 🧩 Menü ID dönüştürücü
+// Helper: ID Çıkarıcı (MongoDB ObjectId uyumluluğu için)
 const idOf = (doc) => {
   if (!doc) return null
   const raw = doc._id ?? doc.id
@@ -122,66 +153,51 @@ const idOf = (doc) => {
   return m ? m[1] : null
 }
 
-// 📦 Menüler getir
+// Menüleri Getir
 const fetchMenus = async () => {
+  loading.value = true
   try {
     const res = await $fetch(`${API_BASE}/all`, {
-      method: 'GET',
-      // ----------------------------------------------------
-      // ✏️ DEĞİŞİKLİK 2: 'credentials' kaldırıldı
-      // ----------------------------------------------------
-      // credentials: 'include', // <-- PROXY İÇİN GEREK YOK
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: { Accept: 'application/json' }
     })
-    menus.value = Array.isArray(res) ? res : []
+    // Tarihe göre sırala (en yeni en üstte)
+    menus.value = Array.isArray(res) 
+      ? res.sort((a, b) => new Date(b.date) - new Date(a.date))
+      : []
   } catch (err) {
-    console.error('❌ Menü listesi alınamadı:', err)
+    console.error('Hata:', err)
     if (err?.statusCode === 401) {
-      error.value = 'Oturum süresi dolmuş, yeniden giriş yapmanız gerekiyor.'
       await logout()
       return navigateTo('/login')
-    } else {
-      error.value = 'Menüler alınırken bir hata oluştu.'
     }
+    error.value = 'Menüler alınamadı.'
   } finally {
     loading.value = false
   }
 }
 
-// 🗑 Silme popup
+// Silme Onayı
 const confirmDelete = (id) => {
-  if (!id) return console.warn('⚠️ Menü ID geçersiz.')
+  if (!id) return
   selectedId.value = id
   showPopup.value = true
 }
 
-// 🚮 Menü sil
+// Silme İşlemi
 const deleteMenu = async (id) => {
   try {
     await $fetch(`${API_BASE}/${encodeURIComponent(id)}`, {
       method: 'DELETE',
-      // ----------------------------------------------------
-      // ✏️ DEĞİŞİKLİK 2: 'credentials' kaldırıldı
-      // ----------------------------------------------------
-      // credentials: 'include', // <-- PROXY İÇİN GEREK YOK
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: { Accept: 'application/json' }
     })
     menus.value = menus.value.filter((m) => idOf(m) !== id)
     showPopup.value = false
-    alert('✅ Menü başarıyla silindi!')
   } catch (err) {
-    console.error('❌ Silme hatası:', err)
-    alert('Menü silinirken bir hata oluştu.')
+    alert('Silme işlemi başarısız.')
   }
 }
 
-// 🕒 Tarih formatı
+// Format Date
 const formatDate = (date) =>
   new Date(date).toLocaleDateString('tr-TR', {
     day: '2-digit',
@@ -193,28 +209,12 @@ onMounted(fetchMenus)
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.4s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-@keyframes popup {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-.animate-popup {
-  animation: popup 0.4s ease;
-}
+.list-enter-active, .list-leave-active { transition: all 0.4s ease; }
+.list-enter-from, .list-leave-to { opacity: 0; transform: scale(0.95); }
+
+.pop-enter-active, .pop-leave-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.9); }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
 </style>

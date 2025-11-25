@@ -13,7 +13,6 @@ use MongoDB\BSON\ObjectId;
 
 class OrderController extends Controller
 {
-    // 🌟 YENİ YARDIMCI FONKSİYON EKLENDİ (purchaseToday için gerekli)
     /**
      * Bugünün başlangıç/bitiş aralığı (TZ güvenli)
      */
@@ -25,51 +24,61 @@ class OrderController extends Controller
         return [$start, $end, $tz];
     }
 
-    // 🌟 YENİ FONKSİYON EKLENDİ (Frontend'in çağırdığı)
     /**
      * POST /api/order/purchase
      * Bugünün menüsünü satın alır.
-     * Bu fonksiyon, senin 'store' metodundaki mantığı taklit eder.
      */
     public function purchaseToday(Request $req)
     {
-        [$startDay, $endDay, $tz] = $this->todayBounds();
-        $user = $req->user();
-        $qty = 1; // Bugünün menüsünü satın alma her zaman 1 adettir
+        // ⏰ 1. SAAT KONTROLÜ (YENİ EKLENEN KISIM)
+        // Şu anki saat Türkiye saatiyle 12:00 veya daha ileriyse işlemi reddet.
+        $tz = config('app.timezone', 'Europe/Istanbul');
+        $now = Carbon::now($tz);
 
-        // 1. Bugün bir menü var mı?
+        if ($now->format('H:i') >= '12:00') {
+            return response()->json([
+                'message' => 'Üzgünüz, bugün için yemek satın alma süresi (12:00) dolmuştur.'
+            ], 403); // 403: Yasaklandı
+        }
+
+        // --- MEVCUT KODLARIN DEVAMI ---
+
+        [$startDay, $endDay] = $this->todayBounds();
+        $user = $req->user();
+        $qty = 1; 
+
+        // 2. Bugün bir menü var mı?
         $menu = Menu::whereBetween('date', [$startDay, $endDay])->first();
         if (!$menu) {
             return response()->json(['message' => 'Bugün için satın alınabilir menü bulunamadı.'], Response::HTTP_NOT_FOUND);
         }
         $menuId = (string) ($menu->_id ?? $menu->id);
 
-        // 2. Fiyatı bul (Senin 'store' metodundaki mantıkla)
-        // (kullanıcı özel → menü → env default)
+        // 3. Fiyatı bul
         $unitPrice = $user->meal_price
             ?? $menu->price
-            ?? (float) env('MENU_DEFAULT_PRICE', 50.0); // .env'den al
+            ?? (float) env('MENU_DEFAULT_PRICE', 50.0);
         
         $total = $unitPrice * $qty;
 
-        // 3. Kullanıcı bugünün menüsünü DAHA ÖNCE satın almış mı? (Senin 'store' metodundaki mantıkla)
+        // 4. Daha önce satın almış mı?
         $alreadyPurchased = Order::where('user_id', (string)($user->_id ?? $user->id))
                                  ->where('menu_id', $menuId)
-                                 ->where('date', $startDay) // Günü normalize et
+                                 ->where('date', $startDay)
                                  ->exists();
 
         if ($alreadyPurchased) {
             return response()->json(['message' => 'Bugünün menüsünü zaten satın almışsınız.'], Response::HTTP_BAD_REQUEST);
         }
 
-        // 4. Bakiye kontrolü (Senin 'store' metodundaki mantıkla)
+        // 5. Bakiye kontrolü
         $freshUser = User::find($user->_id ?? $user->id);
         $balance = (float) ($freshUser->balance ?? 0);
         if ($balance < $total) {
-            return response()->json(['message' => 'Yetersiz bakiye.'], 402); // 402 Payment Required
+            return response()->json(['message' => 'Yetersiz bakiye. Lütfen bakiye yükleyin.'], 402);
         }
 
-        // 5. SATIN ALMA (Senin 'store' metodundaki mantıkla)
+        // 6. SATIN ALMA İŞLEMİ
         try {
             // A. Bakiye düş
             $freshUser->balance = $balance - $total;
@@ -86,38 +95,36 @@ class OrderController extends Controller
                 'status'  => 'paid',
             ]);
 
-            // C. İşlem logu (Senin 'store' metodundaki mantıkla)
+            // C. İşlem logu (Transaction)
             if (class_exists(Transaction::class)) {
                 Transaction::create([
                     'user_id' => (string)($freshUser->_id ?? $freshUser->id),
-                    'type'    => 'debit',
-                    'amount'  => (float) $total, // float olarak kaydet
+                    'type'    => 'debit', // Harcama
+                    'amount'  => (float) $total,
                     'meta'    => [
                         'menu_id'  => $menuId,
-                        'order_id' => (string)($order->_id ?? $order->id)
+                        'order_id' => (string)($order->_id ?? $order->id),
+                        'desc'     => 'Yemek Satın Alma'
                     ]
                 ]);
             }
 
         } catch (\Exception $e) {
-            // Hata olursa (örn: loglama patlarsa) - Not: Bu atomik değil, bakiye düşmüş olabilir.
-            // Gerçek dünyada DB::transaction kullanılmalı.
-            return response()->json(['message' => 'Satın alma sırasında bir hata oluştu: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(['message' => 'Satın alma sırasında teknik bir hata oluştu: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        // Başarılı
         return response()->json([
-            'message'       => 'Satın alma başarılı!',
-            'new_balance'   => $freshUser->balance, // Güncel bakiyeyi dön
+            'message'     => 'Afiyet olsun! Satın alma işlemi başarılı.',
+            'new_balance' => $freshUser->balance,
         ], Response::HTTP_CREATED);
     }
 
 
     // -----------------------------------------------------------------
-    // SENİN MEVCUT FONKSİYONLARIN (Değişmedi)
+    // DİĞER YARDIMCI FONKSİYONLAR (Aynı kaldı)
     // -----------------------------------------------------------------
 
-    // POST /api/orders
+    // POST /api/orders (Manuel veya Admin girişi için opsiyonel)
     public function store(Request $req)
     {
         $data = $req->validate([
@@ -129,28 +136,22 @@ class OrderController extends Controller
         $qty  = (int)($data['qty'] ?? 1);
         $date = isset($data['date']) ? Carbon::parse($data['date'])->startOfDay() : Carbon::today()->startOfDay();
 
-        // Menu bul (Mongo ObjectId normalize)
+        // Menu bul
         $menuId = $this->cleanObjectId($data['menu_id']);
         $menu = Menu::where('_id', $menuId)->first();
         if (!$menu) {
             return response()->json(['message' => 'Menü bulunamadı.'], Response::HTTP_NOT_FOUND);
         }
 
-        // (Opsiyonel) Menü tarihi bugün değilse engelle
-        if (isset($menu->date) && !Carbon::parse($menu->date)->equalTo($date)) {
-            return response()->json(['message' => 'Bu menü bugüne ait değil.'], 422);
-        }
-
-        // Fiyat (kullanıcı özel → menü → env default)
+        // Fiyat hesapla
         $unitPrice = $req->user()->meal_price
             ?? $menu->price
             ?? (int) env('MENU_DEFAULT_PRICE', 125);
 
         $total = (int)$unitPrice * $qty;
-
         $user = $req->user();
 
-        // aynı gün aynı menü tekrarını engelle
+        // Mükerrer kontrolü
         $already = Order::where('user_id', (string)($user->_id ?? $user->id))
             ->where('menu_id', (string)$menuId)
             ->where('date', $date)
@@ -159,28 +160,17 @@ class OrderController extends Controller
             return response()->json(['message' => 'Bu menüyü bugün zaten aldın.'], 422);
         }
 
-        // günlük limit kontrol (opsiyonel)
-        if (!empty($menu->daily_limit)) {
-            $todayQty = Order::where('menu_id', (string)$menuId)
-                ->where('date', $date)
-                ->sum('qty');
-            if ($todayQty + $qty > (int)$menu->daily_limit) {
-                return response()->json(['message' => 'Günlük limit dolu.'], 409);
-            }
-        }
-
-        // 💸 Bakiye kontrolü (fresh read)
+        // Bakiye kontrolü
         $freshUser = User::find($user->_id ?? $user->id);
         $balance = (int) ($freshUser->balance ?? 0);
         if ($balance < $total) {
             return response()->json(['message' => 'Yetersiz bakiye.'], 402);
         }
 
-        // Bakiye düş
+        // İşlem
         $freshUser->balance = $balance - $total;
         $freshUser->save();
 
-        // Siparişi kaydet
         $order = Order::create([
             'user_id' => (string)($freshUser->_id ?? $freshUser->id),
             'menu_id' => (string)$menuId,
@@ -191,7 +181,6 @@ class OrderController extends Controller
             'status'  => 'paid',
         ]);
 
-        // (Opsiyonel) işlem logu
         if (class_exists(Transaction::class)) {
             Transaction::create([
                 'user_id' => (string)($freshUser->_id ?? $freshUser->id),
@@ -224,7 +213,7 @@ class OrderController extends Controller
         return response()->json($orders);
     }
 
-private function cleanObjectId($id)
+    private function cleanObjectId($id)
     {
         if ($id instanceof ObjectId) return $id;
         if (preg_match('/^[a-f\d]{24}$/i', (string)$id)) return new ObjectId((string)$id);

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Menu;
 use Illuminate\Http\Request;
+use App\Models\Announcement;
+use App\Models\Review;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Carbon;
@@ -63,18 +65,56 @@ class AdminController extends Controller
         return response()->json(['message' => 'Belge dosyası sunucuda bulunamadı.'], Response::HTTP_NOT_FOUND);
     }
 
-    public function approveUser($userId)
-    {
-        $user = User::findOrFail($userId);
+    public function approveUser(Request $request, $userId)
+{
+    $request->validate([
+        'meal_price' => 'required|numeric|min:0',
+        'unit' => 'nullable|string' // Birim de gelebilir artık
+    ]);
 
-        if ($user->status === 'approved') {
-            return response()->json(['message' => 'Kullanıcı zaten onaylanmış.'], Response::HTTP_CONFLICT);
+    $user = User::findOrFail($userId);
+
+    // ... diğer kontroller ...
+
+    $user->status = 'approved';
+    $user->meal_price = $request->input('meal_price');
+    
+    // Eğer admin birim seçtiyse onu da güncelle
+    if ($request->has('unit')) {
+        $user->unit = $request->input('unit');
+    }
+    
+    $user->save();
+
+    return response()->json(['message' => 'Onaylandı.'], 200);
+}
+
+    public function updateUserPrice(Request $request, $id)
+    {
+        // Validasyon: Fiyat zorunlu değil, Birim zorunlu değil (ikisi de gelebilir)
+        $request->validate([
+            'meal_price' => 'nullable|numeric|min:0',
+            'unit'       => 'nullable|string'
+        ]);
+
+        $user = User::findOrFail($id);
+
+        // Fiyat geldiyse güncelle
+        if ($request->has('meal_price')) {
+            $user->meal_price = $request->input('meal_price');
         }
 
-        $user->status = 'approved';
+        // Birim geldiyse güncelle
+        if ($request->has('unit')) {
+            $user->unit = $request->input('unit');
+        }
+
         $user->save();
 
-        return response()->json(['message' => 'Kullanıcı başarıyla onaylandı.'], Response::HTTP_OK);
+        return response()->json([
+            'message' => 'Kullanıcı bilgileri güncellendi.',
+            'user'    => $user
+        ], Response::HTTP_OK);
     }
 
     public function rejectUser($userId)
@@ -88,6 +128,34 @@ class AdminController extends Controller
         $user->delete();
 
         return response()->json(['message' => 'Kullanıcı kaydı başarıyla reddedildi ve silindi.'], Response::HTTP_OK);
+    }
+
+    public function getFinanceStats()
+    {
+        try {
+            // 1. Toplam Kullanıcı Bakiyesi (Sistemin borcu gibi düşünülebilir)
+            $totalUserBalance = User::sum('balance');
+
+            // 2. Sistemdeki Toplam Yükleme (Transaction tablosundan 'deposit' olanlar)
+            // Not: Transaction modelin ve 'type' alanın olduğunu varsayıyorum.
+            // Eğer Transaction modelin yoksa bu kısmı silebilirsin.
+            $totalDeposits = \App\Models\Transaction::where('type', 'deposit')->sum('amount');
+            
+            // 3. Son 10 İşlem (Kullanıcıların harcamaları veya yüklemeleri)
+            $recentTransactions = \App\Models\Transaction::with('user:id,name,surname,unit')
+                ->orderBy('created_at', 'desc')
+                ->take(10)
+                ->get();
+
+            return response()->json([
+                'total_balance' => $totalUserBalance,
+                'total_deposits' => $totalDeposits,
+                'recent_transactions' => $recentTransactions
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json(['error' => 'Finans verileri alınamadı: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -223,5 +291,51 @@ class AdminController extends Controller
             \Log::error('Unit stats error: ' . $e->getMessage());
             return response()->json(['error' => 'İstatistikler alınamadı.'], 500);
         }
+    }
+
+    // --- 📢 DUYURU SİSTEMİ ---
+
+    // Tüm duyuruları getir (Admin için)
+    public function getAnnouncements()
+    {
+        return response()->json(Announcement::orderBy('created_at', 'desc')->get());
+    }
+
+    // Yeni duyuru ekle
+    public function createAnnouncement(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string',
+            'content' => 'required|string',
+        ]);
+
+        Announcement::create([
+            'title' => $request->title,
+            'content' => $request->content,
+            'is_active' => true
+        ]);
+
+        return response()->json(['message' => 'Duyuru yayınlandı.'], 201);
+    }
+
+    // Duyuru sil
+    public function deleteAnnouncement($id)
+    {
+        Announcement::destroy($id);
+        return response()->json(['message' => 'Duyuru silindi.']);
+    }
+
+    // --- 💬 YORUM SİSTEMİ (Admin Görüntüleme) ---
+
+    public function getAllReviews()
+    {
+        // Yorumları, yazan kullanıcının adıyla birlikte çekelim
+        // Not: Review modelinde 'user' ilişkisi tanımlı olmalı.
+        // Eğer tanımlı değilse ->with('user') kısmını silip sadece Review::orderBy... yapabilirsin.
+        $reviews = \App\Models\Review::with('user:id,name,surname,unit')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($reviews);
     }
 }

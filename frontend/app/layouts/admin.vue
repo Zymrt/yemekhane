@@ -1,96 +1,121 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white font-sans flex flex-col">
-    <!-- 🧭 HEADER -->
-    <header class="sticky top-0 z-20 backdrop-blur-xl bg-white/5 border-b border-white/10 shadow-md">
-      <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <!-- Sol -->
-        <NuxtLink
-          to="/admin"
-          class="text-2xl font-extrabold tracking-wide text-white hover:text-orange-400 transition"
-        >
-          🍽️ Mezitli Admin
+  <div class="min-h-screen relative bg-[#050505] text-white font-sans selection:bg-purple-500 selection:text-white overflow-hidden">
+    
+    <!-- 🌌 ARKA PLAN EFEKTLERİ -->
+    <div class="fixed inset-0 z-0 pointer-events-none">
+      <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-900/20 rounded-full blur-[120px] animate-pulse"></div>
+      <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-900/20 rounded-full blur-[120px] animate-pulse" style="animation-delay: 2s;"></div>
+      <div class="absolute top-[20%] left-[40%] w-[20%] h-[20%] bg-pink-900/10 rounded-full blur-[100px] animate-pulse" style="animation-delay: 4s;"></div>
+    </div>
+
+    <!-- 🌓 SIDEBAR (MASAÜSTÜ) -->
+    <aside class="fixed top-0 left-0 h-full w-72 bg-[#0a0a0a]/60 backdrop-blur-xl border-r border-white/5 z-50 hidden lg:flex flex-col">
+      
+      <!-- LOGO ALANI (MASAÜSTÜ) -->
+      <div class="h-20 flex items-center px-8 border-b border-white/5">
+        <NuxtLink to="/admin" class="flex items-center gap-3 text-white font-bold text-xl tracking-tight group">
+          
+          <!-- 👇 ESKİ SVG IKON YERİNE SENİN LOGON 👇 -->
+          <img 
+            src="~/assets/logo.jpg" 
+            alt="Logo" 
+            class="w-10 h-10 rounded-xl object-cover shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform"
+          />
+          <!-- 👆 SENİN LOGON 👆 -->
+
+          <span>Yemekhane<span class="text-purple-400">OS</span></span>
+        </NuxtLink>
+      </div>
+
+      <!-- Menü Linkleri -->
+      <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+        <p class="px-4 text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Yönetim</p>
+        
+        <NuxtLink to="/admin" class="nav-item">
+          <i class="i-lucide-layout-grid w-5 h-5"></i> Ana Panel
+        </NuxtLink>
+        <NuxtLink to="/admin/dashboard" class="nav-item">
+          <i class="i-lucide-bar-chart-2 w-5 h-5"></i> Raporlar
+        </NuxtLink>
+        <NuxtLink to="/admin/onay" class="nav-item">
+          <i class="i-lucide-user-check w-5 h-5"></i> Onaylar
+          <span class="ml-auto bg-purple-500/20 text-purple-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-500/20">İşlem</span>
         </NuxtLink>
 
-        <!-- Orta (saat) -->
-        <div
-          class="hidden md:block absolute left-1/2 -translate-x-1/2 text-white/70 font-mono text-sm"
-        >
-          🕒 {{ currentTime }}
-        </div>
+        <p class="px-4 text-xs font-bold text-gray-500 uppercase tracking-widest mt-8 mb-2">İçerik</p>
+        
+        <NuxtLink to="/admin/users" class="nav-item">
+          <i class="i-lucide-users w-5 h-5"></i> Kullanıcılar
+        </NuxtLink>
+        <NuxtLink to="/admin/units" class="nav-item">
+          <i class="i-lucide-building-2 w-5 h-5"></i> Birimler
+        </NuxtLink>
+        <NuxtLink to="/admin/add-menu" class="nav-item">
+          <i class="i-lucide-plus-circle w-5 h-5"></i> Menü Ekle
+        </NuxtLink>
+        <NuxtLink to="/admin/menus" class="nav-item">
+          <i class="i-lucide-utensils w-5 h-5"></i> Menü Geçmişi
+        </NuxtLink>
+        <NuxtLink to="/admin/announcements" class="nav-item">
+          <i class="i-lucide-megaphone w-5 h-5"></i> Duyurular
+        </NuxtLink>
+        <NuxtLink to="/admin/reviews" class="nav-item">
+          <i class="i-lucide-message-square w-5 h-5"></i> Yorumlar
+        </NuxtLink>
+      </nav>
 
-        <!-- Sağ -->
-        <div class="flex items-center gap-4">
-          <div v-if="user" class="flex items-center gap-2 text-sm text-white/80">
-            <span class="text-emerald-400 font-semibold">👤 {{ user.name }}</span>
-            <span class="text-white/50">({{ user.role }})</span>
+      <!-- Profil -->
+      <div class="p-4 border-t border-white/5 bg-black/20">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 border border-white/10 flex items-center justify-center font-bold text-sm text-white shadow-inner">
+            AD
           </div>
-
-          <button
-            @click="handleLogout"
-            class="bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded-lg text-sm font-semibold shadow-md transition"
-          >
-            Çıkış
+          <div class="flex-1 overflow-hidden">
+            <h4 class="text-sm font-bold text-white truncate">Yönetici</h4>
+            <p class="text-xs text-gray-500 truncate">Sistem Admini</p>
+          </div>
+          <button @click="logout" class="p-2 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-red-400" title="Çıkış Yap">
+            <i class="i-lucide-log-out w-5 h-5"></i>
           </button>
         </div>
       </div>
+    </aside>
+
+    <!-- 📱 MOBİL HEADER (Sadece mobilde görünür) -->
+    <header class="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10 z-40 flex items-center justify-between px-6">
+      <div class="flex items-center gap-2 font-bold text-white">
+        
+        <!-- 👇 ESKİ ŞİMŞEK IKONU YERİNE SENİN LOGON 👇 -->
+        <img src="~/assets/logo.jpg" alt="Logo" class="w-8 h-8 rounded-lg object-cover" />
+        <!-- 👆 SENİN LOGON 👆 -->
+
+        YemekhaneOS
+      </div>
+      <NuxtLink to="/admin" class="p-2 text-gray-300"><i class="i-lucide-home w-6 h-6"></i></NuxtLink>
     </header>
 
-    <!-- 📦 ANA İÇERİK -->
-    <main class="flex-grow relative z-10 max-w-7xl mx-auto w-full px-6 py-10">
+    <main class="lg:ml-72 pt-20 lg:pt-6 p-6 relative z-10 min-h-screen overflow-x-hidden">
       <slot />
     </main>
 
-    <!-- 🌙 FOOTER -->
-    <footer class="mt-auto text-center py-6 text-sm text-white/70 border-t border-white/10 backdrop-blur-md bg-white/5">
-      © {{ currentYear }} Mezitli Belediyesi
-      <span class="text-white/50">| Yemekhane Yönetim Sistemi</span>
-      <div class="mt-1 italic text-white/40">“Sahilden Sofraya, Her Gün Mezitli!”</div>
-    </footer>
-
-    <!-- ✨ Hafif ışık efekti -->
-    <div class="pointer-events-none fixed inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent blur-3xl opacity-10"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
 import useAuth from '../composables/useAuth'
-
-const { logout, user } = useAuth()
-
-// 🕒 Saat (yalnızca client)
-const currentTime = ref('--:--:--')
-const currentYear = new Date().getFullYear()
-let timer = null
-
-onMounted(() => {
-  const tick = () => {
-    currentTime.value = new Date().toLocaleTimeString('tr-TR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    })
-  }
-  tick()
-  timer = setInterval(tick, 1000)
-})
-onBeforeUnmount(() => {
-  if (timer) clearInterval(timer)
-})
-
-const handleLogout = async () => {
-  try {
-    await logout()
-  } finally {
-    await navigateTo('/login')
-  }
-}
+const { logout } = useAuth()
 </script>
 
 <style scoped>
-/* Yumuşak fade utility (sayfa içi geçişlerde kullanabilirsin) */
-.fade-enter-active,
-.fade-leave-active { transition: opacity .3s ease; }
-.fade-enter-from,
-.fade-leave-to { opacity: 0; }
+.nav-item {
+  @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 border border-transparent hover:border-white/5;
+}
+.router-link-active {
+  @apply bg-gradient-to-r from-purple-500/10 to-blue-500/10 text-white border-white/10 shadow-[0_0_20px_rgba(168,85,247,0.15)];
+}
+.router-link-active i {
+  @apply text-purple-400;
+}
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
 </style>

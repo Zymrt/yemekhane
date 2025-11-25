@@ -20,27 +20,59 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mt-6">
       
-      <div
-        class="md:col-span-1 bg-white/30 backdrop-blur-2xl border border-white/30
-               rounded-3xl p-6 shadow-lg hover:shadow-2xl transform hover:-translate-y-1
-               transition-all duration-300"
-      >
-        <h2 class="text-2xl font-bold text-gray-900 mb-4 drop-shadow-sm">Profil Bilgileri</h2>
-        <div class="space-y-3 text-gray-800">
-          <p><strong>Ad Soyad:</strong> {{ user?.name }} {{ user?.surname }}</p>
-          <p><strong>Birim:</strong> {{ user?.unit }}</p>
-          <p><strong>Telefon:</strong> {{ user?.phone || '-' }}</p>
-          <p><strong>Kayıt Tarihi:</strong> {{ formatDate(user?.created_at) }}</p>
+      <!-- SOL SÜTUN (PROFİL + DUYURULAR) -->
+      <div class="md:col-span-1 space-y-10">
+        <div
+          class="bg-white/30 backdrop-blur-2xl border border-white/30
+                 rounded-3xl p-6 shadow-lg hover:shadow-2xl transform hover:-translate-y-1
+                 transition-all duration-300"
+        >
+          <h2 class="text-2xl font-bold text-gray-900 mb-4 drop-shadow-sm">Profil Bilgileri</h2>
+          <div class="space-y-3 text-gray-800">
+            <p><strong>Ad Soyad:</strong> {{ user?.name }} {{ user?.surname }}</p>
+            <p><strong>Birim:</strong> {{ user?.unit }}</p>
+            <p><strong>Telefon:</strong> {{ user?.phone || '-' }}</p>
+            <p><strong>Kayıt Tarihi:</strong> {{ formatDate(user?.created_at) }}</p>
+            
+            <p class="text-xs text-gray-500">Tanımlı Yemek Ücreti: {{ user?.meal_price }} TL</p>
+            
+            <p class="mt-3">
+              <strong>Bakiye: </strong>
+              <span class="text-emerald-600 font-bold text-lg">{{ user?.balance?.toFixed(2) || '0.00' }} ₺</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- DUYURULAR -->
+        <div 
+          v-if="announcements.length > 0"
+          class="bg-white/30 backdrop-blur-2xl border border-white/30
+                 rounded-3xl p-6 shadow-lg hover:shadow-2xl transform hover:-translate-y-1
+                 transition-all duration-300"
+        >
+          <h2 class="text-2xl font-bold text-gray-900 mb-4 drop-shadow-sm flex items-center gap-2">
+            <i class="i-lucide-bell text-orange-600"></i> Duyurular
+          </h2>
           
-          <p class="text-xs text-gray-500">Tanımlı Yemek Ücreti: {{ user?.meal_price }} TL</p>
-          
-          <p class="mt-3">
-            <strong>Bakiye: </strong>
-            <span class="text-emerald-600 font-bold text-lg">{{ user?.balance?.toFixed(2) || '0.00' }} ₺</span>
-          </p>
+          <div class="space-y-4 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+            <div 
+              v-for="ann in announcements" 
+              :key="ann._id" 
+              class="bg-white/60 border-l-4 border-orange-500 rounded-r-xl p-4 shadow-sm hover:bg-white/80 transition"
+            >
+              <div class="flex justify-between items-start mb-1">
+                <h3 class="font-bold text-gray-800 text-sm">{{ ann.title }}</h3>
+                <span class="text-[10px] text-gray-500 bg-white px-2 py-0.5 rounded-full shadow-sm">
+                  {{ new Date(ann.created_at).toLocaleDateString('tr-TR') }}
+                </span>
+              </div>
+              <p class="text-gray-600 text-xs leading-relaxed">{{ ann.content }}</p>
+            </div>
+          </div>
         </div>
       </div>
 
+      <!-- SAĞ SÜTUN (SATIN ALMA + MENÜ) -->
       <div class="md:col-span-2 space-y-10">
         
         <div 
@@ -58,14 +90,20 @@
               </p>
             </div>
             
+            <!-- ⏰ SAAT KONTROLÜ EKLENMİŞ BUTON -->
             <button 
               @click="purchaseMenu" 
-              :disabled="purchaseState.loading"
-              class="btn btn-primary w-full sm:w-auto py-3 px-6 text-lg disabled:opacity-50"
+              :disabled="purchaseState.loading || isCutoffTimePassed"
+              class="btn w-full sm:w-auto py-3 px-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              :class="isCutoffTimePassed ? 'bg-slate-500 cursor-not-allowed text-white' : 'btn-primary'"
             >
-              {{ purchaseState.loading ? 'İşleniyor...' : 'Hemen Satın Al' }}
+              <span v-if="isCutoffTimePassed">Süre Doldu (12:00) ⏳</span>
+              <span v-else>{{ purchaseState.loading ? 'İşleniyor...' : 'Hemen Satın Al' }}</span>
             </button>
           </div>
+          <p v-if="isCutoffTimePassed" class="text-sm text-red-600 font-medium mt-2 text-center sm:text-left bg-red-50 p-2 rounded-lg border border-red-200">
+            ⚠️ Yemek sipariş saati (12:00) sona ermiştir. Yarın tekrar bekleriz.
+          </p>
           <p v-if="purchaseState.error" class="text-red-700 font-medium mt-3 text-center sm:text-left">
             Hata: {{ purchaseState.error }}
           </p>
@@ -190,53 +228,60 @@
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
+import { reactive, computed, ref, onMounted } from 'vue'
 import useAuth from '../composables/useAuth'
 import protectUserPage from '../composables/protectUserPage'
 
-// Sayfa koruması
 await protectUserPage()
 
-// Kullanıcı verisini al (meal_price burada)
 const { user } = useAuth()
-
-// Menü ve Yorum Durumunu Çek
 const { data: reviewData, pending, error, refresh } = await useFetch('/api/reviews/today')
 
 const purchaseState = reactive({ loading: false, error: null })
 const reviewForm = reactive({ rating: 5, comment: '' })
 const reviewState = reactive({ loading: false, success: false, error: null })
+const announcements = ref([])
 
-// 🌟 DÜZELTİLMİŞ FİYAT HESAPLAMA MANTIĞI 🌟
+// ⏰ SAAT KONTROLÜ (12:00 SINIRI)
+// true ise buton kilitlenir
+const isCutoffTimePassed = computed(() => {
+  const now = new Date()
+  return now.getHours() >= 12 // Saat 12 veya daha büyükse süre doldu
+})
+
+onMounted(async () => {
+  try {
+    announcements.value = await $fetch('/api/announcements')
+  } catch (e) {
+    console.error("Duyurular alınamadı")
+  }
+})
+
 const mealPrice = computed(() => {
-  // 1. Kullanıcının özel fiyatı var mı?
-  // user.value varsa VE meal_price undefined/null değilse (0 olabilir, 0'ı kabul etmeliyiz)
   if (user.value && user.value.meal_price !== undefined && user.value.meal_price !== null) {
     return parseFloat(user.value.meal_price);
   }
-  
-  // 2. Menüye özel fiyat var mı?
   if (reviewData.value?.menu?.price) {
     return parseFloat(reviewData.value.menu.price);
   }
-  
-  // 3. Hiçbiri yoksa varsayılan
   return parseFloat(import.meta.env.VITE_MEAL_PRICE || 50.0); 
 })
 
 async function purchaseMenu() {
+  // Frontend'de ek güvenlik kontrolü
+  if (isCutoffTimePassed.value) {
+    alert('Üzgünüz, yemek sipariş saati (12:00) dolmuştur.')
+    return
+  }
+
   purchaseState.loading = true;
   purchaseState.error = null;
   try {
     const response = await $fetch('/api/order/purchase', { method: 'POST' });
-    
-    // Bakiye güncelle (Auth state'ini güncelle ki header'da da değişsin)
-    if (user.value) {
-      user.value.balance = response.new_balance;
-    }
-    // Verileri yenile (has_order: true olacak)
+    if (user.value) user.value.balance = response.new_balance;
     await refresh();
   } catch (err) {
+    // Backend'den gelen "Süre doldu" hatasını da burada yakalarız
     purchaseState.error = err.data?.message || 'İşlem başarısız oldu.';
   } finally {
     purchaseState.loading = false;
@@ -245,10 +290,7 @@ async function purchaseMenu() {
 
 async function submitReview() {
   const menuId = reviewData.value?.menu?._id || reviewData.value?.menu?.id;
-  if (!menuId) {
-    reviewState.error = 'Menü ID bulunamadı.';
-    return;
-  }
+  if (!menuId) { reviewState.error = 'Menü ID bulunamadı.'; return; }
   reviewState.loading = true;
   reviewState.error = null;
   try {
@@ -283,4 +325,7 @@ const formatDate = (dateStr) => {
 .btn-outline { @apply text-white border border-white/40 bg-transparent hover:bg-white/10; }
 .btn-primary { @apply text-white bg-gradient-to-r from-orange-500 via-orange-500 to-orange-600 hover:brightness-110 shadow-md; }
 @media (max-width: 768px) { .btn { @apply text-sm px-3 py-2; } }
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
 </style>

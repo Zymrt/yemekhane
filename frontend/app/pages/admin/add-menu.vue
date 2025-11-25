@@ -1,173 +1,180 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white px-6 py-10">
+  <div class="max-w-[1200px] mx-auto animate-fade-in">
+    
     <!-- HEADER -->
-    <header class="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between mb-10 gap-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
       <div>
-        <h1 class="text-4xl font-extrabold flex items-center gap-3">
-          <i class="i-lucide-utensils text-orange-400 text-5xl"></i>
+        <h1 class="text-3xl font-bold text-white flex items-center gap-3">
+          <span class="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
+            <ClipboardDocumentListIcon class="w-8 h-8" />
+          </span>
           Menü Yönetimi
         </h1>
-        <NuxtLink
-          to="/admin"
-          class="text-sm text-orange-300 hover:text-orange-400 mt-1 inline-block transition"
-        >
-          ← Admin Paneline Geri Dön
+        <p class="text-slate-400 mt-2 ml-1">Günlük yemek menüsünü sisteme girin ve yönetin.</p>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <div class="bg-[#121212]/80 backdrop-blur-md border border-white/10 rounded-xl px-5 py-2.5 text-sm shadow-lg">
+          <span class="text-slate-400">📅 Bugün:</span>
+          <span class="font-bold text-emerald-400 ml-1">{{ todayDate }}</span>
+        </div>
+        <NuxtLink to="/admin" class="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm hover:bg-white/10 transition flex items-center gap-2 text-slate-300">
+          <ArrowLeftIcon class="w-4 h-4" /> İptal
         </NuxtLink>
-      </div>
-
-      <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-5 py-3 shadow-md text-sm">
-        📅 Bugün: <span class="font-semibold">{{ todayDate }}</span>
-      </div>
-    </header>
-
-    <!-- DASHBOARD MINI INFO -->
-    <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 mb-10 text-white">
-      <div class="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-xl shadow hover:bg-white/20 transition">
-        <div class="text-sm opacity-80">Toplam Menü Öğesi</div>
-        <div class="text-2xl font-bold mt-1">{{ menuItems.length }}</div>
-      </div>
-      <div class="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-xl shadow hover:bg-white/20 transition">
-        <div class="text-sm opacity-80">Durum</div>
-        <div class="text-2xl font-bold mt-1">{{ loading ? 'Kaydediliyor...' : 'Hazır' }}</div>
-      </div>
-      <div class="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-xl shadow hover:bg-white/20 transition">
-        <div class="text-sm opacity-80">Son Güncelleme</div>
-        <div class="text-2xl font-bold mt-1">{{ lastUpdated || '—' }}</div>
       </div>
     </div>
 
-    <!-- FORM -->
-    <form
-      @submit.prevent="submitMenu"
-      class="max-w-6xl mx-auto bg-white/5 border border-white/10 backdrop-blur-2xl shadow-2xl rounded-2xl p-8 transition hover:shadow-[0_0_25px_rgba(255,255,255,0.2)]"
-    >
-      <!-- TARİH -->
-      <div class="mb-8">
-        <label for="menuDate" class="block text-lg font-semibold text-white mb-2">
-          📅 Menü Tarihi
-        </label>
-        <input
-          type="date"
-          id="menuDate"
-          v-model="menuDate"
-          required
-          class="mt-1 block w-full px-4 py-3 rounded-lg border-none bg-white/90 text-gray-900 font-medium shadow focus:ring-4 focus:ring-orange-400 outline-none"
-        />
+    <!-- DASHBOARD MINI INFO (İstatistikler) -->
+    <div class="grid md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-[#121212]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg hover:border-emerald-500/20 transition group">
+        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:text-emerald-400 transition-colors">Toplam Öğe</div>
+        <div class="text-2xl font-black text-white mt-1">{{ menuItems.length }}</div>
       </div>
+      <div class="bg-[#121212]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg hover:border-emerald-500/20 transition group">
+        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:text-emerald-400 transition-colors">Durum</div>
+        <div class="text-2xl font-black text-white mt-1 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full" :class="loading ? 'bg-yellow-500 animate-pulse' : 'bg-emerald-500'"></span>
+          {{ loading ? 'İşleniyor...' : 'Hazır' }}
+        </div>
+      </div>
+      <div class="bg-[#121212]/60 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg hover:border-emerald-500/20 transition group">
+        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:text-emerald-400 transition-colors">Son Güncelleme</div>
+        <div class="text-2xl font-black text-white mt-1 font-mono">{{ lastUpdated || '—' }}</div>
+      </div>
+    </div>
 
-      <h3 class="text-xl font-semibold text-white/90 mb-4 border-b border-white/20 pb-2 flex items-center gap-2">
-        <i class="i-lucide-list text-sky-300"></i> Menü Öğeleri
-      </h3>
+    <!-- ANA FORM ALANI -->
+    <div class="bg-[#121212]/80 border border-white/5 rounded-3xl p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+      <!-- Dekoratif Arka Plan Işığı -->
+      <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none"></div>
 
-      <!-- YEMEKLER -->
-      <transition-group name="fade" tag="div">
-        <div
-          v-for="(item, index) in menuItems"
-          :key="index"
-          class="p-5 mb-5 rounded-xl bg-white/10 border border-white/20 relative hover:bg-white/15 transition"
-        >
-          <button
-            v-if="menuItems.length > 1"
-            type="button"
-            @click="removeItem(index)"
-            class="absolute top-3 right-3 text-red-400 hover:text-red-600 font-bold"
-          >
-            ✕
-          </button>
-
-          <div class="grid md:grid-cols-2 gap-4">
-            <div>
-              <label :for="'name-' + index" class="block text-sm font-medium text-white/90 mb-1">
-                🍲 Yemek Adı
-              </label>
-              <input
-                type="text"
-                :id="'name-' + index"
-                v-model="item.name"
-                required
-                class="block w-full px-3 py-2 rounded-lg border-none bg-white/90 text-gray-900 shadow focus:ring-2 focus:ring-sky-400 outline-none"
-                placeholder="Örn: Mercimek Çorbası"
-              />
-            </div>
-
-            <div>
-              <label :for="'desc-' + index" class="block text-sm font-medium text-white/90 mb-1">
-                📝 Açıklama
-              </label>
-              <input
-                type="text"
-                :id="'desc-' + index"
-                v-model="item.description"
-                class="block w-full px-3 py-2 rounded-lg border-none bg-white/90 text-gray-900 shadow focus:ring-2 focus:ring-sky-400 outline-none"
-                placeholder="Örn: (Terbiyeli, etli)"
-              />
+      <form @submit.prevent="submitMenu" class="relative z-10">
+        
+        <!-- Tarih Seçimi -->
+        <div class="mb-8 max-w-md">
+          <label for="menuDate" class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Menü Tarihi</label>
+          <div class="relative group">
+            <input
+              type="date"
+              id="menuDate"
+              v-model="menuDate"
+              required
+              class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 outline-none transition-all placeholder-slate-600"
+            />
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500 group-hover:text-emerald-400 transition-colors">
+              <CalendarIcon class="w-5 h-5" />
             </div>
           </div>
         </div>
-      </transition-group>
 
-      <!-- EKLE BUTONU -->
-      <button
-        type="button"
-        @click="addItem"
-        class="w-full py-3 rounded-lg border-2 border-dashed border-white/30 text-white/90 hover:bg-white/10 transition font-semibold"
-      >
-        + Yeni Yemek Öğesi Ekle
-      </button>
+        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2 border-b border-white/5 pb-2">
+          <ListBulletIcon class="w-5 h-5 text-emerald-400" />
+          Menü Öğeleri
+        </h3>
 
-      <!-- HATA -->
-      <transition name="fade">
-        <p
-          v-if="error"
-          class="text-red-300 bg-red-900/40 mt-5 p-3 rounded-lg border border-red-500/40 text-center"
+        <!-- YEMEKLER LİSTESİ -->
+        <transition-group name="list" tag="div" class="space-y-4 mb-8">
+          <div
+            v-for="(item, index) in menuItems"
+            :key="index"
+            class="bg-white/5 border border-white/5 rounded-2xl p-5 relative hover:border-white/10 transition-all group"
+          >
+            <!-- Silme Butonu -->
+            <button
+              v-if="menuItems.length > 1"
+              type="button"
+              @click="removeItem(index)"
+              class="absolute top-4 right-4 text-slate-600 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-lg transition"
+              title="Kaldır"
+            >
+              <XMarkIcon class="w-5 h-5" />
+            </button>
+
+            <div class="grid md:grid-cols-2 gap-5 pr-10">
+              <div>
+                <label :for="'name-' + index" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Yemek Adı</label>
+                <input
+                  type="text"
+                  :id="'name-' + index"
+                  v-model="item.name"
+                  required
+                  class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500 outline-none transition-all placeholder-slate-700 text-sm"
+                  placeholder="Örn: Mercimek Çorbası"
+                />
+              </div>
+
+              <div>
+                <label :for="'desc-' + index" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Açıklama / Kalori</label>
+                <input
+                  type="text"
+                  :id="'desc-' + index"
+                  v-model="item.description"
+                  class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500 outline-none transition-all placeholder-slate-700 text-sm"
+                  placeholder="Örn: (Terbiyeli, etli) veya 250 cal"
+                />
+              </div>
+            </div>
+          </div>
+        </transition-group>
+
+        <!-- EKLE BUTONU -->
+        <button
+          type="button"
+          @click="addItem"
+          class="w-full py-3 border border-dashed border-white/20 rounded-xl text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wide"
         >
-          ⚠️ {{ error }}
-        </p>
-      </transition>
+          <PlusCircleIcon class="w-5 h-5" /> Yeni Yemek Ekle
+        </button>
 
-      <!-- KAYDET -->
-      <button
-        type="submit"
-        :disabled="loading"
-        class="w-full mt-8 py-3 rounded-lg text-white font-bold text-lg
-               bg-gradient-to-r from-sky-500 to-orange-400
-               hover:from-sky-400 hover:to-orange-300
-               shadow-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]
-               transition disabled:opacity-50"
-      >
-        {{ loading ? '⏳ Kaydediliyor...' : '💾 Menüyü Kaydet' }}
-      </button>
-    </form>
+        <!-- HATA MESAJI -->
+        <transition name="fade">
+          <div v-if="error" class="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-300 text-sm">
+            <ExclamationTriangleIcon class="w-5 h-5 shrink-0" />
+            {{ error }}
+          </div>
+        </transition>
 
-    <!-- POPUP -->
-    <transition name="fade">
-      <div
-        v-if="showPopup"
-        class="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50"
-      >
-        <div
-          class="bg-gray-900/90 border border-white/10 rounded-2xl px-10 py-8 shadow-2xl text-center animate-popup max-w-md w-full"
+        <!-- KAYDET BUTONU -->
+        <button
+          type="submit"
+          :disabled="loading"
+          class="w-full mt-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
         >
-          <div class="text-5xl mb-3 text-green-400">✅</div>
-          <h2 class="text-2xl font-bold mb-2">Menü Kaydedildi</h2>
-          <p class="text-gray-300">Her şey harika görünüyor 🍽️</p>
+          <span v-if="loading" class="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span>
+          {{ loading ? 'Kaydediliyor...' : 'Menüyü Yayınla' }}
+        </button>
+
+      </form>
+    </div>
+
+    <!-- BAŞARI POPUP -->
+    <transition name="pop">
+      <div v-if="showPopup" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 p-4">
+        <div class="bg-[#1a1a1a] border border-emerald-500/30 rounded-3xl p-8 shadow-2xl text-center max-w-sm w-full relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500"></div>
+          <div class="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-400 text-3xl border border-emerald-500/20">
+            ✓
+          </div>
+          <h2 class="text-2xl font-bold text-white mb-2">Başarılı!</h2>
+          <p class="text-slate-400">Menü sisteme kaydedildi ve yayına alındı. 🍽️</p>
         </div>
       </div>
     </transition>
+
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-// Sadece 'useAuth' import ediliyor, 'useAuthGuard' değil. (DOĞRU)
 import useAuth from '../composables/useAuth'
+import { 
+  ClipboardDocumentListIcon, ArrowLeftIcon, CalendarIcon, ListBulletIcon, 
+  XMarkIcon, PlusCircleIcon, ExclamationTriangleIcon 
+} from '@heroicons/vue/24/outline'
 
 definePageMeta({ layout: 'admin' })
 
-// Sadece 'logout' alınıyor, 'protectAdminPage' değil. (DOĞRU)
 const { logout } = useAuth()
-
-// 'await protectAdminPage()' çağrısı SİLİNDİ. (DOĞRU)
 
 const loading = ref(false)
 const error = ref(null)
@@ -199,7 +206,6 @@ const submitMenu = async () => {
   }
 
   try {
-    // API isteği proxy'e uygun (DOĞRU)
     await $fetch('/api/admin/menu/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -213,7 +219,6 @@ const submitMenu = async () => {
     setTimeout(() => (showPopup.value = false), 2500)
   } catch (err) {
     console.error('❌ Menü ekleme hatası:', err)
-    // 401 hatasında (cookie süresi dolarsa) logout yap (DOĞRU)
     if (err?.statusCode === 401) await logout()
     error.value = err.data?.message || 'Menü kaydedilirken beklenmedik bir hata oluştu.'
   } finally {
@@ -221,29 +226,16 @@ const submitMenu = async () => {
   }
 }
 </script>
+
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.4s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-@keyframes popup {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-.animate-popup {
-  animation: popup 0.4s ease;
-}
+/* Animasyonlar */
+.list-enter-active,
+.list-leave-active { transition: all 0.3s ease; }
+.list-enter-from, .list-leave-to { opacity: 0; transform: translateX(-10px); }
+
+.pop-enter-active, .pop-leave-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(0.9); }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
 </style>

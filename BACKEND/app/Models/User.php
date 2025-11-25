@@ -22,7 +22,7 @@ class User extends Model implements Authenticatable
     // --- 1. BU DİZİYİ GÜNCELLEYİN ---
     protected $fillable = [
         'name', 'surname', 'phone', 'password', 'unit', 'balance', 'status', 'document_path',
-        'role' // 'is_admin' yerine bunu ekledik.
+        'role' ,'meal_price'// 'is_admin' yerine bunu ekledik.
     ];
 
     /**

@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-// Storage'ı kullanmadığımız için silebiliriz ama kalsa da olur.
+use Illuminate\Support\Facades\Log; // Loglamak için ekledik
 
 class RegisterController extends Controller
 {
     public function register(Request $request)
     {
+        // 1. Validasyon
         $request->validate([
             'name' => 'required|string|max:255',
             'surname' => 'required|string|max:255',
@@ -21,24 +22,45 @@ class RegisterController extends Controller
             'proof_document' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        $path = $request->file('proof_document')->store('proofs', 'public');
+        try {
+            // 2. Dosyayı Kaydet
+            $path = $request->file('proof_document')->store('proofs', 'public');
 
-        // --- DEĞİŞİKLİK BURADA ---
-        $user = User::create([
-            'name' => $request->name,
-            'surname' => $request->surname,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-            'unit' => $request->unit,
-            'document_path' => $path, // Alan adını düzelttik
-            // 'status' => 'pending',   --> BU SATIRI SİLİYORUZ (Modelden gelecek)
-            // 'balance' => 0,          --> BU SATIRI DA SİLİYORUZ (Modelden gelecek)
-        ]);
-        // 'role' zaten modelden geleceği için buraya eklemiyoruz.
+            // 3. KULLANICIYI ELLE OLUŞTUR (Create yerine new User)
+            // Bu yöntem $fillable dizisine bakmaz, direkt nesneye yazar.
+            $user = new User();
+            $user->name = $request->name;
+            $user->surname = $request->surname;
+            $user->phone = $request->phone;
+            $user->password = Hash::make($request->password);
+            $user->unit = $request->unit;
+            $user->document_path = $path;
+            
+            // Varsayılan değerleri de elle girelim, modelin keyfine bırakmayalım
+            $user->role = 'user';
+            $user->status = 'pending'; 
+            $user->balance = 0;
+            $user->meal_price = 0;
 
-        return response()->json([
-            'message' => 'Kayıt başarıyla oluşturuldu. Onay bekleniyor.',
-            'user_id' => $user->_id
-        ], 201);
+            // 4. Veritabanına Kaydet
+            $user->save();
+
+            // Log dosyasına not düşelim (storage/logs/laravel.log'dan bakabilirsin)
+            Log::info('Kullanıcı başarıyla veritabanına yazıldı. ID: ' . $user->_id);
+
+            return response()->json([
+                'message' => 'Kayıt başarıyla oluşturuldu. Onay bekleniyor.',
+                'user_id' => $user->_id
+            ], 201);
+
+        } catch (\Exception $e) {
+            // Hata olursa gizleme, direkt ekrana bas
+            Log::error('Kayıt Hatası: ' . $e->getMessage());
+            
+            return response()->json([
+                'message' => 'Veritabanı kayıt hatası!',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
