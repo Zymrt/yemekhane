@@ -6,9 +6,11 @@ use App\Models\Menu;
 use App\Models\Order;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\Log; // 👈 Kendi Log Modelini kullanıyoruz
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http; // 👈 Socket.io için eklendi
 use MongoDB\BSON\ObjectId;
 
 class OrderController extends Controller
@@ -20,7 +22,8 @@ class OrderController extends Controller
     {
         $tz = config('app.timezone', 'Europe/Istanbul');
         $start = Carbon::today($tz)->startOfDay();
-        $end   = Carbon::today($tz)->endOfDay();
+        // Hata giderildi: Geçersiz karakterler temizlendi.
+        $end = Carbon::today($tz)->endOfDay();
         return [$start, $end, $tz];
     }
 
@@ -30,15 +33,14 @@ class OrderController extends Controller
      */
     public function purchaseToday(Request $req)
     {
-        // ⏰ 1. SAAT KONTROLÜ (YENİ EKLENEN KISIM)
-        // Şu anki saat Türkiye saatiyle 12:00 veya daha ileriyse işlemi reddet.
+        // ⏰ 1. SAAT KONTROLÜ (YEMEK SATIN ALMA SINIRI)
         $tz = config('app.timezone', 'Europe/Istanbul');
         $now = Carbon::now($tz);
 
         if ($now->format('H:i') >= '12:00') {
             return response()->json([
                 'message' => 'Üzgünüz, bugün için yemek satın alma süresi (12:00) dolmuştur.'
-            ], 403); // 403: Yasaklandı
+            ], 403);
         }
 
         // --- MEVCUT KODLARIN DEVAMI ---
@@ -88,7 +90,7 @@ class OrderController extends Controller
             $order = Order::create([
                 'user_id' => (string)($freshUser->_id ?? $freshUser->id),
                 'menu_id' => $menuId,
-                'qty'     => $qty,
+                'qty'     => $qty, // Hata giderildi
                 'price'   => $unitPrice,
                 'total'   => $total,
                 'date'    => $startDay,
@@ -109,6 +111,15 @@ class OrderController extends Controller
                 ]);
             }
 
+            // D. 🔥 LOG OLUŞTUR (Normal Satın Alma Log'u)
+             Log::create([
+                'user_id' => (string)($freshUser->_id ?? $freshUser->id),
+                'user_name' => $freshUser->name . ' ' . $freshUser->surname,
+                'action' => 'Yemek Satın Alma',
+                'details' => "Menü satın alındı. Tutar: {$total} TL.",
+                'ip_address' => $req->ip()
+            ]);
+
         } catch (\Exception $e) {
             return response()->json(['message' => 'Satın alma sırasında teknik bir hata oluştu: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -119,12 +130,75 @@ class OrderController extends Controller
         ], Response::HTTP_CREATED);
     }
 
+    /**
+     * 📱 QR Kod ile Yemek Yeme İşlemi (Admin/Staff çağırır)
+     * Laravel'deki QR kod işleme ve Socket'e bildirme mantığı.
+     */
+    public function processQrEntry(Request $request)
+    {
+        if (!$request->user()) {
+             return response()->json(['message' => 'Yetkisiz erişim.'], 401);
+        }
+        
+        // 1. QR'dan User ID al
+        $userId = $request->input('qr_code'); 
+        
+        $user = User::find($userId);
+        if (!$user) {
+            return response()->json(['message' => 'Geçersiz Kart/QR.'], 404);
+        }
+        
+        // 2. Bugünün sınırlarını al
+        [$startDay, $endDay] = $this->todayBounds();
+        
+        // 3. Bugün için SATIN ALINMIŞ bir siparişi var mı?
+        // status: 'paid' (Satın alınmış ama yenmemiş)
+        // status: 'served' (Zaten yenmiş)
+        $order = Order::where('user_id', $userId)
+            ->whereBetween('date', [$startDay, $endDay])
+            ->first();
 
+        if (!$order) {
+            return response()->json([
+                'message' => "{$user->name} bugün için yemek satın almamış! ❌"
+            ], 404);
+        }
+
+        if ($order->status === 'served') {
+            return response()->json([
+                'message' => "{$user->name} yemeğini zaten yemiş! ⚠️"
+            ], 409); // Conflict
+        }
+
+        // 4. Durumu güncelle: Yemeği yedi (served)
+        $order->status = 'served';
+        $order->save();
+
+        // 5. Log Oluştur
+        Log::create([
+            'user_id' => $user->id,
+            'user_name' => $user->name . ' ' . $user->surname,
+            'action' => 'Yemek Teslimi',
+            'details' => "{$user->name} {$user->surname} turnikeden geçti / yemeğini aldı.",
+            'ip_address' => $request->ip()
+        ]);
+
+        // 6. Socket'e Bildir (Doluluk artsın)
+        try {
+            Http::post('http://localhost:3001/api/entry');
+        } catch (\Exception $e) {}
+
+        return response()->json([
+            'message' => 'Afiyet Olsun! ✅', 
+            'user_name' => $user->name, 
+            'price' => $order->price
+        ], 200);
+    }
+    
     // -----------------------------------------------------------------
-    // DİĞER YARDIMCI FONKSİYONLAR (Aynı kaldı)
+    // DİĞER YARDIMCI FONKSİYONLAR (store, myOrders, cleanObjectId)
     // -----------------------------------------------------------------
 
-    // POST /api/orders (Manuel veya Admin girişi için opsiyonel)
     public function store(Request $req)
     {
         $data = $req->validate([

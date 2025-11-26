@@ -10,8 +10,9 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\TransactionController; 
 use App\Http\Controllers\PaymentController; 
-use App\Http\Controllers\UnitController; // 👈 UnitController'ı ekledik
-use App\Models\Announcement; // 👈 Duyuru modelini ekledik
+use App\Http\Controllers\UnitController; 
+use App\Http\Controllers\LogController; // 👈 EKLENDİ: Log arama/filtreleme için
+use App\Models\Announcement; 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -71,12 +72,12 @@ Route::middleware(['token.auth'])->group(function () {
     // --------------------------------------------------------
     Route::prefix('admin')->middleware('admin')->group(function () {
         
-        // 📢 DUYURU YÖNETİMİ (Ekle/Sil)
-        Route::get('/announcements', [AdminController::class, 'getAnnouncements']); // Admin listesi
+        // 📢 DUYURU YÖNETİMİ
+        Route::get('/announcements', [AdminController::class, 'getAnnouncements']); 
         Route::post('/announcements', [AdminController::class, 'createAnnouncement']);
         Route::delete('/announcements/{id}', [AdminController::class, 'deleteAnnouncement']);
 
-        // 💬 YORUM YÖNETİMİ (Görüntüleme)
+        // 💬 YORUM YÖNETİMİ
         Route::get('/reviews', [AdminController::class, 'getAllReviews']);
 
         // 🧾 MENÜ İŞLEMLERİ
@@ -93,8 +94,15 @@ Route::middleware(['token.auth'])->group(function () {
         Route::post('/users/{userId}/approve', [AdminController::class, 'approveUser']);
         Route::delete('/users/{userId}/reject', [AdminController::class, 'rejectUser']);
         Route::post('/users/{id}/update-price', [AdminController::class, 'updateUserPrice']);
+        Route::get('/users/{userId}/details', [AdminController::class, 'getUserDetails']); // Detay sayfası için
 
-        // 📊 DASHBOARD RAPORLAR
+        // 📊 LOGLAR & QR (YENİ EKLENENLER)
+        // 👇 LogController'a bağladık ki arama/filtreleme çalışsın
+        Route::get('/logs', [LogController::class, 'index']); 
+        // 👇 QR Tarayıcı için gerekli rota
+        Route::post('/qr/scan', [OrderController::class, 'processQrEntry']);
+
+        // 📈 DASHBOARD RAPORLAR
         Route::get('/dashboard-stats', [AdminController::class, 'getDashboardStats']);
         Route::get('/unit-stats', [AdminController::class, 'getUnitStats']);
         Route::get('/finance-stats', [AdminController::class, 'getFinanceStats']);

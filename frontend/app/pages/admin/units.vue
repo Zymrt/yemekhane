@@ -1,16 +1,18 @@
 <template>
-  <div class="min-h-screen bg-slate-950 text-slate-100 px-6 py-10">
+  <div class="max-w-[1200px] mx-auto animate-fade-in">
     
     <!-- HEADER -->
-    <div class="max-w-4xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
       <div>
-        <h1 class="text-3xl font-extrabold text-white flex items-center gap-3">
-          <BuildingOffice2Icon class="text-purple-400 w-10 h-10" />
+        <h1 class="text-3xl font-bold text-white flex items-center gap-3">
+          <span class="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400">
+            <BuildingOffice2Icon class="w-8 h-8" />
+          </span>
           Birim Yönetimi
         </h1>
-        <p class="text-slate-400 mt-1">Sistemdeki birimleri ve varsayılan yemek ücretlerini yönetin.</p>
+        <p class="text-slate-400 mt-2 ml-1">Departmanları ve fiyatlandırmayı yapılandırın.</p>
       </div>
-      <NuxtLink to="/admin" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm hover:bg-slate-700 transition flex items-center gap-2">
+      <NuxtLink to="/admin" class="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm hover:bg-white/10 transition flex items-center gap-2 text-slate-300">
         <ArrowLeftIcon class="w-4 h-4" /> Menüye Dön
       </NuxtLink>
     </div>
@@ -18,55 +20,58 @@
     <!-- İÇERİK -->
     <div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
       
-      <!-- SOL: EKLEME / DÜZENLEME FORMU -->
+      <!-- SOL PANEL: EKLEME / DÜZENLEME FORMU -->
       <div class="md:col-span-1">
-        <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 sticky top-6 transition-all" :class="editingId ? 'border-purple-500/50 shadow-lg shadow-purple-500/10' : ''">
+        <div class="bg-[#121212]/80 border border-white/5 rounded-3xl p-6 backdrop-blur-xl shadow-2xl sticky top-6 transition-all duration-300"
+             :class="editingId ? 'border-purple-500/50 ring-1 ring-purple-500/20' : ''">
           
-          <h2 class="font-bold text-white mb-4 flex justify-between items-center">
-            <span>{{ editingId ? 'Birimi Düzenle' : 'Yeni Birim Ekle' }}</span>
-            <span v-if="editingId" class="text-xs text-purple-400 bg-purple-500/10 px-2 py-1 rounded">Düzenleniyor</span>
+          <h2 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+            <span v-if="editingId" class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
+            {{ editingId ? 'Birimi Düzenle' : 'Yeni Birim Ekle' }}
           </h2>
           
-          <div class="space-y-4">
-            <div>
-              <label class="text-xs text-slate-400 block mb-1">Birim Adı</label>
+          <div class="space-y-5">
+            <div class="group">
+              <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block group-focus-within:text-purple-400 transition-colors">Birim Adı</label>
               <input 
                 v-model="form.name" 
                 type="text" 
                 placeholder="Örn: Belediye Personeli" 
-                class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:border-purple-500 outline-none transition"
+                class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 outline-none transition-all placeholder-slate-600"
               >
             </div>
             
-            <div>
-              <label class="text-xs text-slate-400 block mb-1">Varsayılan Ücret (TL)</label>
+            <div class="group">
+              <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block group-focus-within:text-purple-400 transition-colors">Varsayılan Ücret (TL)</label>
               <div class="relative">
                  <input 
                    v-model="form.price" 
                    type="number" 
                    placeholder="125" 
-                   class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-3 pr-8 py-2 text-white focus:border-purple-500 outline-none transition"
+                   class="w-full bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 outline-none transition-all font-mono"
                   >
-                 <span class="absolute right-3 top-2 text-slate-500 text-sm">₺</span>
+                 <span class="absolute right-4 top-3.5 text-slate-500 font-bold">₺</span>
               </div>
             </div>
 
             <!-- BUTONLAR -->
-            <div class="flex gap-2">
+            <div class="pt-2 flex gap-3">
               <button 
                 @click="saveUnit" 
                 :disabled="loading" 
-                class="flex-1 text-white font-medium py-2 rounded-lg transition flex justify-center items-center gap-2"
-                :class="editingId ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-purple-600 hover:bg-purple-500'"
+                class="flex-1 text-white font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                :class="editingId 
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-900/20' 
+                  : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-purple-900/20'"
               >
-                <span v-if="loading" class="animate-spin">⟳</span>
+                <span v-if="loading" class="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span>
                 <span>{{ loading ? 'İşleniyor...' : (editingId ? 'Güncelle' : 'Kaydet') }}</span>
               </button>
 
               <button 
                 v-if="editingId" 
                 @click="cancelEdit" 
-                class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition text-sm flex items-center justify-center"
+                class="px-4 bg-white/5 hover:bg-white/10 border border-white/5 text-slate-300 rounded-xl transition active:scale-95 flex items-center justify-center"
                 title="Vazgeç"
               >
                 <XMarkIcon class="w-5 h-5" />
@@ -77,51 +82,54 @@
         </div>
       </div>
 
-      <!-- SAĞ: LİSTE -->
+      <!-- SAĞ PANEL: LİSTE -->
       <div class="md:col-span-2 space-y-4">
-        <div v-if="units.length === 0" class="text-center py-10 text-slate-500 bg-slate-900/30 rounded-2xl border border-dashed border-slate-800">
-           Henüz birim eklenmemiş.
+        <div v-if="units.length === 0" class="flex flex-col items-center justify-center py-20 bg-white/5 rounded-3xl border border-dashed border-white/10 text-slate-500">
+           <BuildingOffice2Icon class="w-16 h-16 mb-4 opacity-20" />
+           <p>Henüz birim eklenmemiş.</p>
         </div>
 
-        <transition-group name="list" tag="div" class="space-y-4">
+        <transition-group name="list" tag="div" class="space-y-3">
           <div 
             v-for="unit in units" 
             :key="unit.id" 
-            class="group bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex justify-between items-center hover:border-purple-500/30 transition"
-            :class="editingId === unit.id ? 'border-purple-500 ring-1 ring-purple-500/50 bg-purple-900/10' : ''"
+            class="group bg-[#121212]/60 border border-white/5 rounded-2xl p-4 flex justify-between items-center hover:bg-white/5 hover:border-purple-500/30 transition-all duration-300 backdrop-blur-sm"
+            :class="editingId === unit.id ? 'bg-purple-900/10 border-purple-500/50' : ''"
           >
             <!-- SOL: İSİM VE FİYAT -->
-            <div class="flex items-center gap-4">
-              <div class="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold text-lg">
+            <div class="flex items-center gap-5">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center font-black text-xl text-slate-300 shadow-inner">
                  {{ unit.name.charAt(0).toUpperCase() }}
               </div>
               <div>
-                <h3 class="font-bold text-slate-200">{{ unit.name }}</h3>
-                <p class="text-sm text-slate-500">
-                  <span class="text-emerald-400 font-mono font-bold">{{ unit.price }} ₺</span>
-                </p>
+                <h3 class="font-bold text-white text-lg group-hover:text-purple-300 transition-colors">{{ unit.name }}</h3>
+                <div class="flex items-center gap-2 mt-1">
+                  <span 
+                    class="px-2 py-0.5 rounded text-xs font-mono font-bold"
+                    :class="unit.price === 0 ? 'bg-slate-700/50 text-slate-300' : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'"
+                  >
+                    {{ unit.price }} ₺
+                  </span>
+                </div>
               </div>
             </div>
             
             <!-- SAĞ: BUTONLAR -->
-            <div class="flex gap-2">
+            <div class="flex gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
               <button 
                 @click="startEdit(unit)" 
-                class="p-2 bg-slate-800 text-blue-400 hover:bg-blue-500/20 border border-slate-700 hover:border-blue-500/50 rounded-lg transition" 
-                title="Düzenle"
+                class="p-2.5 bg-white/5 text-blue-400 hover:bg-blue-500/20 border border-white/5 hover:border-blue-500/50 rounded-lg transition" 
               >
                 <PencilSquareIcon class="w-5 h-5" />
               </button>
 
               <button 
                 @click="deleteUnit(unit.id)" 
-                class="p-2 bg-slate-800 text-red-400 hover:bg-red-500/20 border border-slate-700 hover:border-red-500/50 rounded-lg transition" 
-                title="Sil"
+                class="p-2.5 bg-white/5 text-red-400 hover:bg-red-500/20 border border-white/5 hover:border-red-500/50 rounded-lg transition" 
               >
                 <TrashIcon class="w-5 h-5" />
               </button>
             </div>
-
           </div>
         </transition-group>
       </div>
@@ -157,7 +165,8 @@ const fetchUnits = async () => {
 }
 
 const startEdit = (unit) => {
-  form.value = { name: unit.name, price: unit.price }
+  // Price'ı Number olarak atıyoruz ki input düzgün çalışsın
+  form.value = { name: unit.name, price: Number(unit.price) }
   editingId.value = unit.id 
 }
 
@@ -167,32 +176,36 @@ const cancelEdit = () => {
 }
 
 const saveUnit = async () => {
-  // 👇 DÜZELTME BURADA: Fiyatın 0 olabilmesine izin veriyoruz (Boş değilse ve null değilse kabul et)
-  if (!form.value.name || form.value.price === '' || form.value.price === null) {
-    return alert("Lütfen tüm alanları doldurun")
+  // 💥 KRİTİK KONTROL DÜZELTİLDİ: 0 (sıfır) değeri kabul ediliyor, sadece boş string/null reddediliyor.
+  if (!form.value.name || form.value.price === '' || form.value.price === null || form.value.price < 0) {
+    return alert("Lütfen geçerli bir isim girin ve ücreti (sıfır bile olsa) belirtin.")
   }
   
   loading.value = true
   try {
+    const payloadPrice = Number(form.value.price); // Backend'e sayı olarak gönder
+
     if (editingId.value) {
+      // GÜNCELLEME
       await $fetch(`/api/admin/units/${editingId.value}`, {
         method: 'PUT',
         body: { 
           name: form.value.name,
-          price: Number(form.value.price)
+          price: payloadPrice
         }
       })
-      // Manuel güncelleme
+      // Manuel güncelleme (Hızlı UI için)
       const index = units.value.findIndex(u => u.id === editingId.value)
       if (index !== -1) {
-        units.value[index] = { ...units.value[index], name: form.value.name, price: Number(form.value.price) }
+        units.value[index] = { ...units.value[index], name: form.value.name, price: payloadPrice }
       }
     } else {
+      // YENİ KAYIT
       const newUnit = await $fetch('/api/admin/units', {
         method: 'POST',
         body: { 
           name: form.value.name,
-          price: Number(form.value.price)
+          price: payloadPrice
         }
       })
       units.value.push(newUnit)
@@ -223,13 +236,6 @@ onMounted(fetchUnits)
 </script>
 
 <style scoped>
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.3s ease;
-}
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateX(-20px);
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
 </style>

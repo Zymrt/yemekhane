@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Http;
 use App\Models\User;
 use App\Models\Menu;
 use Illuminate\Http\Request;
@@ -10,6 +11,7 @@ use App\Models\Review;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Carbon;
+
 
 class AdminController extends Controller
 {
@@ -303,20 +305,33 @@ class AdminController extends Controller
 
     // Yeni duyuru ekle
     public function createAnnouncement(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string',
-            'content' => 'required|string',
-        ]);
+{
+    $request->validate([
+        'title' => 'required|string',
+        'content' => 'required|string',
+    ]);
 
-        Announcement::create([
-            'title' => $request->title,
-            'content' => $request->content,
-            'is_active' => true
-        ]);
+    $announcement = Announcement::create([
+        'title' => $request->title,
+        'content' => $request->content,
+        'is_active' => true
+    ]);
 
-        return response()->json(['message' => 'Duyuru yayınlandı.'], 201);
+    // 🔥 KRİTİK ADIM: SOCKET SUNUCUSUNU TETİKLE 🔥
+    // Socket sunucumuzdan duyuru sinyali göndermesini isteyelim.
+    try {
+        // Socket sunucusuna bir duyuru yayınladığını bildir.
+        // Bizim socket sunucumuz bu duyuruyu alıp tüm bağlı kullanıcılara yayacak.
+        Http::post('http://localhost:3001/api/announcement-posted', [
+            'title' => $request->title
+        ]);
+    } catch (\Exception $e) {
+        // Socket sunucusu kapalıysa bile duyuruyu kaydetmeye devam et
+        \Log::warning('Socket sunucusu duyuru sinyali gönderilemedi: ' . $e->getMessage());
     }
+
+    return response()->json(['message' => 'Duyuru yayınlandı.'], 201);
+}
 
     // Duyuru sil
     public function deleteAnnouncement($id)

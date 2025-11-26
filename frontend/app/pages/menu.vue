@@ -20,8 +20,10 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mt-6">
       
-      <!-- SOL SÜTUN (PROFİL + DUYURULAR) -->
-      <div class="md:col-span-1 space-y-10">
+      <!-- SOL SÜTUN (PROFİL + DOLULUK + QR + DUYURULAR) -->
+      <div class="md:col-span-1 space-y-8">
+        
+        <!-- 1. PROFİL KARTI -->
         <div
           class="bg-white/30 backdrop-blur-2xl border border-white/30
                  rounded-3xl p-6 shadow-lg hover:shadow-2xl transform hover:-translate-y-1
@@ -43,7 +45,56 @@
           </div>
         </div>
 
-        <!-- DUYURULAR -->
+        <!-- 2. CANLI DOLULUK ORANI (YENİ) -->
+        <div class="bg-white/30 backdrop-blur-2xl border border-white/30 rounded-3xl p-6 shadow-lg relative overflow-hidden">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-bold text-gray-900 flex items-center gap-2">
+              <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+              Yemekhane Durumu
+            </h3>
+            <span class="text-xs font-bold bg-white/20 px-2 py-1 rounded text-gray-800">%{{ occupancyRate.toFixed(0) }} Dolu</span>
+          </div>
+          
+          <div class="h-4 w-full bg-white/20 rounded-full overflow-hidden">
+            <div 
+              class="h-full bg-gradient-to-r from-emerald-400 to-red-500 transition-all duration-1000 ease-out"
+              :style="`width: ${occupancyRate}%`"
+            ></div>
+          </div>
+          <p class="text-xs text-gray-600 mt-2 text-center">Veriler anlık olarak güncellenmektedir.</p>
+        </div>
+
+        <!-- 3. QR KOD ALANI (YENİ - Sadece satın alındıysa görünür) -->
+        <div 
+          v-if="reviewData?.has_order" 
+          class="bg-white/30 backdrop-blur-2xl border border-white/30 rounded-3xl p-6 shadow-lg text-center transform transition hover:scale-105 duration-300"
+        >
+          <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+            <i class="i-lucide-qr-code text-purple-600"></i> Yemek Kartım
+          </h3>
+          
+          <div class="bg-white p-3 rounded-2xl inline-block shadow-inner border-4 border-purple-100">
+            <QrcodeVue :value="user?._id || user?.id" :size="160" level="H" background="#ffffff" foreground="#000000" />
+          </div>
+          
+          <p class="text-xs text-gray-700 mt-3 font-medium bg-white/40 py-1 px-3 rounded-full inline-block">
+            Görevliye Gösteriniz 📸
+          </p>
+        </div>
+
+        <!-- Satın alınmadıysa uyarı göster -->
+        <div v-else class="bg-white/20 backdrop-blur-xl border border-white/20 rounded-3xl p-6 text-center">
+           <div class="w-12 h-12 bg-gray-200/30 rounded-full flex items-center justify-center mx-auto mb-3">
+             <i class="i-lucide-lock text-gray-600 text-xl"></i>
+           </div>
+           <h3 class="text-gray-800 font-bold text-sm">QR Kod Gizli</h3>
+           <p class="text-gray-600 text-xs mt-1">QR kodunuzu görmek için lütfen bugünün menüsünü satın alın.</p>
+        </div>
+
+        <!-- 4. DUYURULAR -->
         <div 
           v-if="announcements.length > 0"
           class="bg-white/30 backdrop-blur-2xl border border-white/30
@@ -70,9 +121,10 @@
             </div>
           </div>
         </div>
+
       </div>
 
-      <!-- SAĞ SÜTUN (SATIN ALMA + MENÜ) -->
+      <!-- SAĞ SÜTUN (SATIN ALMA + MENÜ + DEĞERLENDİRME) -->
       <div class="md:col-span-2 space-y-10">
         
         <div 
@@ -90,7 +142,7 @@
               </p>
             </div>
             
-            <!-- ⏰ SAAT KONTROLÜ EKLENMİŞ BUTON -->
+            <!-- ⏰ SAAT KONTROLÜ -->
             <button 
               @click="purchaseMenu" 
               :disabled="purchaseState.loading || isCutoffTimePassed"
@@ -231,6 +283,8 @@
 import { reactive, computed, ref, onMounted } from 'vue'
 import useAuth from '../composables/useAuth'
 import protectUserPage from '../composables/protectUserPage'
+import QrcodeVue from 'qrcode.vue' // QR Kod Kütüphanesi
+import { io } from 'socket.io-client' // Socket.io
 
 await protectUserPage()
 
@@ -241,22 +295,24 @@ const purchaseState = reactive({ loading: false, error: null })
 const reviewForm = reactive({ rating: 5, comment: '' })
 const reviewState = reactive({ loading: false, success: false, error: null })
 const announcements = ref([])
+const occupancyRate = ref(0)
 
-// ⏰ SAAT KONTROLÜ (12:00 SINIRI)
-// true ise buton kilitlenir
-const isCutoffTimePassed = computed(() => {
-  const now = new Date()
-  return now.getHours() >= 12 // Saat 12 veya daha büyükse süre doldu
-})
-
-onMounted(async () => {
+// 📢 Duyuruları Çek
+const fetchAnnouncements = async () => {
   try {
     announcements.value = await $fetch('/api/announcements')
   } catch (e) {
     console.error("Duyurular alınamadı")
   }
+}
+
+// ⏰ Saat Kontrolü (12:00)
+const isCutoffTimePassed = computed(() => {
+  const now = new Date()
+  return now.getHours() >= 12 
 })
 
+// Fiyat Hesaplama
 const mealPrice = computed(() => {
   if (user.value && user.value.meal_price !== undefined && user.value.meal_price !== null) {
     return parseFloat(user.value.meal_price);
@@ -268,12 +324,10 @@ const mealPrice = computed(() => {
 })
 
 async function purchaseMenu() {
-  // Frontend'de ek güvenlik kontrolü
   if (isCutoffTimePassed.value) {
     alert('Üzgünüz, yemek sipariş saati (12:00) dolmuştur.')
     return
   }
-
   purchaseState.loading = true;
   purchaseState.error = null;
   try {
@@ -281,7 +335,6 @@ async function purchaseMenu() {
     if (user.value) user.value.balance = response.new_balance;
     await refresh();
   } catch (err) {
-    // Backend'den gelen "Süre doldu" hatasını da burada yakalarız
     purchaseState.error = err.data?.message || 'İşlem başarısız oldu.';
   } finally {
     purchaseState.loading = false;
@@ -313,6 +366,24 @@ const formatDate = (dateStr) => {
     day: 'numeric', month: 'long', year: 'numeric'
   });
 }
+
+onMounted(async () => {
+  // 1. Duyuruları yükle
+  await fetchAnnouncements()
+
+  // 2. Socket Bağlantısı
+  const socket = io('http://localhost:3001') 
+
+  // Doluluk Dinle
+  socket.on('occupancy_update', (data) => {
+    occupancyRate.value = data.percentage
+  })
+
+  // Yeni Duyuru Dinle
+  socket.on('new_announcement', () => {
+    fetchAnnouncements() 
+  })
+})
 </script>
 
 <style scoped>

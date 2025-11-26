@@ -27,26 +27,47 @@
     <!-- KARTLAR GRID -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
       
-      <!-- 1. ONAY BEKLEYENLER -->
+      <!-- 1. QR TARAYICI (TURNİKE) - YENİ EKLENDİ -->
+      <NuxtLink to="/admin/scanner" class="glass-card group relative overflow-hidden">
+        <!-- Hareketli Arka Plan -->
+        <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"></div>
+        
+        <div class="relative z-10 flex flex-col h-full justify-between">
+          <div class="flex justify-between items-start">
+            <div class="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400 group-hover:scale-110 transition-transform duration-300">
+              <QrCodeIcon class="w-8 h-8" />
+            </div>
+            <div class="bg-purple-500/20 text-purple-300 text-[10px] font-bold px-2 py-1 rounded-full border border-purple-500/20">
+              Görevli
+            </div>
+          </div>
+          <div class="mt-6">
+            <h3 class="text-xl font-black text-white group-hover:text-purple-300 transition-colors">QR Okuyucu</h3>
+            <p class="text-sm text-slate-400 mt-1">Yemek dağıtımını başlat.</p>
+          </div>
+        </div>
+      </NuxtLink>
+
+      <!-- 2. ONAY BEKLEYENLER -->
       <NuxtLink to="/admin/onay" class="glass-card group">
         <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex flex-col h-full justify-between">
           <div class="flex justify-between items-start">
             <div class="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20 text-cyan-400 group-hover:scale-110 transition-transform duration-300">
-              <UserGroupIcon class="w-8 h-8" />
+              <UserPlusIcon class="w-8 h-8" />
             </div>
             <div class="bg-cyan-500/20 text-cyan-300 text-[10px] font-bold px-2 py-1 rounded-full border border-cyan-500/20 animate-pulse">
-              Aksiyon
+              İşlem
             </div>
           </div>
           <div class="mt-6">
-            <h3 class="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">Onay Bekleyenler</h3>
+            <h3 class="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">Onaylar</h3>
             <p class="text-sm text-slate-400 mt-1">Yeni kayıtları incele.</p>
           </div>
         </div>
       </NuxtLink>
 
-      <!-- 2. KULLANICI LİSTESİ -->
+      <!-- 3. KULLANICI LİSTESİ -->
       <NuxtLink to="/admin/users" class="glass-card group">
         <div class="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex flex-col h-full justify-between">
@@ -54,13 +75,27 @@
             <UsersIcon class="w-8 h-8" />
           </div>
           <div class="mt-6">
-            <h3 class="text-xl font-bold text-white group-hover:text-blue-300 transition-colors">Kullanıcı Listesi</h3>
+            <h3 class="text-xl font-bold text-white group-hover:text-blue-300 transition-colors">Kullanıcılar</h3>
             <p class="text-sm text-slate-400 mt-1">Tüm üyeleri yönet.</p>
           </div>
         </div>
       </NuxtLink>
 
-      <!-- 3. BİRİM YÖNETİMİ -->
+      <!-- 4. SİSTEM LOGLARI (YENİ) -->
+      <NuxtLink to="/admin/logs" class="glass-card group">
+        <div class="absolute inset-0 bg-gradient-to-br from-slate-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="relative z-10 flex flex-col h-full justify-between">
+          <div class="p-3 bg-slate-500/10 rounded-xl border border-slate-500/20 text-slate-400 group-hover:scale-110 transition-transform">
+            <DocumentTextIcon class="w-8 h-8" />
+          </div>
+          <div class="mt-6">
+            <h3 class="text-xl font-bold text-white group-hover:text-slate-300 transition-colors">Log Kayıtları</h3>
+            <p class="text-sm text-slate-400 mt-1">Sistem hareketlerini izle.</p>
+          </div>
+        </div>
+      </NuxtLink>
+
+      <!-- 5. BİRİM YÖNETİMİ -->
       <NuxtLink to="/admin/units" class="glass-card group">
         <div class="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex flex-col h-full justify-between">
@@ -74,7 +109,7 @@
         </div>
       </NuxtLink>
 
-      <!-- 4. DUYURULAR -->
+      <!-- 6. DUYURULAR -->
       <NuxtLink to="/admin/announcements" class="glass-card group">
         <div class="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex flex-col h-full justify-between">
@@ -88,7 +123,7 @@
         </div>
       </NuxtLink>
 
-      <!-- 5. MENÜ EKLE -->
+      <!-- 7. MENÜ EKLE -->
       <NuxtLink to="/admin/add-menu" class="glass-card group">
         <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex flex-col h-full justify-between">
@@ -102,7 +137,7 @@
         </div>
       </NuxtLink>
 
-      <!-- 6. YORUMLAR -->
+      <!-- 8. YORUMLAR -->
       <NuxtLink to="/admin/reviews" class="glass-card group">
         <div class="absolute inset-0 bg-gradient-to-br from-pink-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex flex-col h-full justify-between">
@@ -116,7 +151,7 @@
         </div>
       </NuxtLink>
 
-      <!-- 7. MENÜ GEÇMİŞİ -->
+      <!-- 9. MENÜ GEÇMİŞİ -->
       <NuxtLink to="/admin/menus" class="glass-card group">
         <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div class="relative z-10 flex flex-col h-full justify-between">
@@ -130,7 +165,7 @@
         </div>
       </NuxtLink>
 
-      <!-- 8. İSTATİSTİKLER (Geniş Kart Olabilir ama Grid'e uysun) -->
+      <!-- 10. İSTATİSTİKLER -->
       <NuxtLink to="/admin/dashboard" class="glass-card group relative overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-blue-600/20 animate-gradient-x"></div>
         <div class="relative z-10 flex flex-col h-full justify-between">
@@ -153,7 +188,8 @@ import { ref, onMounted } from 'vue'
 import useAuth from '../composables/useAuth'
 import {
   UserGroupIcon, UsersIcon, ClipboardDocumentListIcon, ClipboardDocumentCheckIcon,
-  ChartBarIcon, BuildingOffice2Icon, MegaphoneIcon, ChatBubbleLeftRightIcon
+  ChartBarIcon, BuildingOffice2Icon, MegaphoneIcon, ChatBubbleLeftRightIcon, 
+  QrCodeIcon, UserPlusIcon, DocumentTextIcon
 } from '@heroicons/vue/24/outline'
 
 definePageMeta({ layout: 'admin' })

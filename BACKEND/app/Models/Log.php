@@ -14,8 +14,10 @@ class Log extends Model
 
     protected $fillable = [
         'user_id',      // İşlemi yapan kişi
+        'user_name',    // İşlemi yapan kişinin adı (Sonradan eklendi, loglarda görünsün diye)
         'action',       // İşlem başlığı (Örn: "Menü Eklendi")
-        'description',  // Detay (Örn: "Mercimek Çorbası sisteme eklendi.")
+        'details',      // Detay (description yerine details kullandık controllerda)
+        'description',  // Alternatif detay alanı
         'type',         // info, warning, error, critical
         'ip_address',   // Güvenlik için IP
         'user_agent'    // Tarayıcı bilgisi

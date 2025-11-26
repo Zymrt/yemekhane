@@ -12,12 +12,22 @@
         </h1>
         <p class="text-slate-400 mt-2 ml-1">Sistem verilerini ve finansal durumu detaylı inceleyin.</p>
       </div>
-      <NuxtLink 
-        to="/admin" 
-        class="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm hover:bg-white/10 transition flex items-center gap-2 text-slate-300"
-      >
-        <ArrowLeftIcon class="w-4 h-4" /> Menüye Dön
-      </NuxtLink>
+      
+      <!-- 👇 LOG KAYITLARI BUTONU BURAYA EKLENDİ 👇 -->
+      <div class="flex items-center gap-3">
+        <NuxtLink 
+          to="/admin/logs" 
+          class="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm hover:bg-white/10 transition flex items-center gap-2 text-slate-300"
+        >
+          <DocumentTextIcon class="w-4 h-4" /> Log Kayıtları
+        </NuxtLink>
+        <NuxtLink 
+          to="/admin" 
+          class="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm hover:bg-white/10 transition flex items-center gap-2 text-slate-300"
+        >
+          <ArrowLeftIcon class="w-4 h-4" /> Menüye Dön
+        </NuxtLink>
+      </div>
     </div>
 
     <!-- SEKME (TAB) BUTONLARI -->
@@ -33,7 +43,8 @@
             ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
             : 'text-slate-400 hover:text-white hover:bg-white/5'"
         >
-          <component :is="tab.icon" class="w-4 h-4" />
+          <!-- İkonlar, component olarak dinamik render ediliyor -->
+          <component :is="tab.icon" class="w-4 h-4" /> 
           {{ tab.label }}
         </button>
 
@@ -53,7 +64,6 @@
       <transition name="fade" mode="out-in">
         <div v-if="activeTab === 'genel'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
-          <!-- İstatistik Kartları -->
           <div class="stat-card group">
             <div class="flex justify-between items-start mb-4">
               <div class="text-slate-400 text-xs font-bold uppercase tracking-wider">Toplam Kullanıcı</div>
@@ -249,9 +259,10 @@
 import { ref, onMounted } from 'vue'
 import FinanceStats from '../components/reports/FinanceStats.vue'
 import { 
-  ChartBarIcon, ArrowLeftIcon, HomeIcon, BuildingOffice2Icon, // HomeIcon EKLENDİ (Squares2x2Icon yerine)
-  SparklesIcon, BanknotesIcon, UsersIcon, UserGroupIcon, CheckBadgeIcon,
-  ClipboardDocumentListIcon, CalendarIcon, DocumentArrowDownIcon, ArrowRightIcon, FireIcon
+  ChartBarIcon, ArrowLeftIcon, HomeIcon, BuildingOffice2Icon, DocumentTextIcon,
+  UsersIcon, UserGroupIcon, CheckBadgeIcon, ClipboardDocumentListIcon, 
+  CalendarIcon, DocumentArrowDownIcon, ArrowRightIcon, FireIcon,
+  WalletIcon 
 } from '@heroicons/vue/24/outline'
 
 definePageMeta({ layout: 'admin' })
@@ -263,10 +274,10 @@ const loading = ref(true)
 
 // Sekme Konfigürasyonu
 const tabs = [
-  { id: 'genel', label: 'Genel Bakış', icon: HomeIcon }, // İkon HomeIcon olarak değiştirildi
+  { id: 'genel', label: 'Genel Bakış', icon: HomeIcon },
   { id: 'birimler', label: 'Birim Raporları', icon: BuildingOffice2Icon },
-  { id: 'yemekler', label: 'Menü Analizi', icon: SparklesIcon },
-  { id: 'finans', label: 'Bakiye & Finans', icon: BanknotesIcon },
+  { id: 'yemekler', label: 'Menü Analizi', icon: FireIcon },
+  { id: 'finans', label: 'Bakiye & Finans', icon: WalletIcon },
 ]
 
 const formatCurrency = (val) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val || 0)

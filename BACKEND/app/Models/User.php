@@ -15,32 +15,30 @@ class User extends Model implements Authenticatable
     protected $collection = 'users';
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
+     * Toplu atamaya (Mass Assignment) izin verilen alanlar.
+     * meal_price ve unit alanlarının burada olması şart.
      */
-    // --- 1. BU DİZİYİ GÜNCELLEYİN ---
     protected $fillable = [
-        'name', 'surname', 'phone', 'password', 'unit', 'balance', 'status', 'document_path',
-        'role' ,'meal_price'// 'is_admin' yerine bunu ekledik.
+        'name', 
+        'surname', 
+        'phone', 
+        'password', 
+        'unit', 
+        'balance', 
+        'status', 
+        'document_path',
+        'role', 
+        'meal_price'
     ];
 
     /**
-     * The model's default values for attributes.
-     *
-     * @var array
+     * Varsayılan değerler.
      */
-    // --- 2. BU BLOĞU KOMPLE EKLEYİN ---
     protected $attributes = [
         'role' => 'user',
         'status' => 'pending',
         'balance' => 0,
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array
-     */
     protected $hidden = ['password'];
 }
