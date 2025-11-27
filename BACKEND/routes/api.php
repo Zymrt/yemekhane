@@ -11,7 +11,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\TransactionController; 
 use App\Http\Controllers\PaymentController; 
 use App\Http\Controllers\UnitController; 
-use App\Http\Controllers\LogController; // 👈 EKLENDİ: Log arama/filtreleme için
+use App\Http\Controllers\Auth\PasswordResetController; 
+use App\Http\Controllers\LogController;
 use App\Models\Announcement; 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -28,6 +29,8 @@ use Illuminate\Http\Request;
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/refresh', [RefreshController::class, 'refresh']);
+Route::post('/password/forgot', [PasswordResetController::class, 'forgot']);
+Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 
 // 📢 DUYURULAR (Herkese Açık - Karşılama Ekranı İçin)
 Route::get('/announcements', function () {

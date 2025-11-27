@@ -1,28 +1,22 @@
 <template>
   <div class="relative min-h-screen overflow-hidden">
-    <!-- Animated background (welcome/register ile tutarlı) -->
     <div class="absolute inset-0 bg-[radial-gradient(60%_80%_at_20%_10%,rgba(59,130,246,0.30),transparent),radial-gradient(55%_60%_at_80%_20%,rgba(16,185,129,0.32),transparent),radial-gradient(70%_70%_at_50%_90%,rgba(234,88,12,0.28),transparent)]">
       <div class="absolute inset-0 animate-bgShift opacity-70 bg-gradient-to-br from-blue-500 via-emerald-500 to-orange-500 mix-blend-screen"></div>
     </div>
 
-    <!-- Aurora ribbons -->
     <div class="pointer-events-none absolute -inset-20 blur-3xl opacity-40">
       <div class="aurora aurora-1"></div>
       <div class="aurora aurora-2"></div>
       <div class="aurora aurora-3"></div>
     </div>
 
-    <!-- Particles -->
     <div aria-hidden="true">
       <span v-for="n in 14" :key="n" class="particle"></span>
     </div>
 
-    <!-- Content -->
     <div class="relative z-10 flex min-h-screen items-center justify-center p-6">
       <div class="w-full max-w-md">
-        <!-- Card -->
         <div class="backdrop-blur-xl bg-white/15 border border-white/20 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.35)] p-6 md:p-8 animate-fadeInUp">
-          <!-- Header -->
           <div class="flex flex-col items-center mb-8 text-center">
             <div class="group relative w-24 h-24 rounded-full bg-white/15 border border-white/30 shadow-xl flex items-center justify-center overflow-hidden">
               <div class="absolute inset-0 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors"></div>
@@ -31,7 +25,6 @@
             <h2 class="text-3xl font-extrabold text-white mt-5 drop-shadow-sm tracking-tight">Kullanıcı Girişi</h2>
           </div>
 
-          <!-- Form -->
           <form @submit.prevent="handleLogin" class="space-y-5">
             <div>
               <label for="phone" class="block text-sm font-semibold text-white mb-1">Telefon Numarası</label>
@@ -43,6 +36,12 @@
               <div class="relative">
                 <input v-model="password" id="password" :type="showPassword ? 'text' : 'password'" required class="input pr-10" placeholder="••••••••" />
                 <button type="button" class="show-btn" @click="showPassword = !showPassword">{{ showPassword ? '🙈' : '👁️' }}</button>
+              </div>
+              
+              <div class="flex justify-end mt-2">
+                <NuxtLink to="/forgot-password" class="text-xs text-white/70 hover:text-white transition decoration-transparent hover:decoration-white hover:underline">
+                  Şifremi unuttum?
+                </NuxtLink>
               </div>
             </div>
 
@@ -66,7 +65,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRoute } from 'vue-router' // 🔹 redirect query'si için
+import { useRoute } from 'vue-router'
 import useAuth from '../composables/useAuth'
 
 const route = useRoute()
@@ -90,13 +89,9 @@ const handleLogin = async () => {
       return
     }
 
-    // 🔁 Eğer URL'de redirect query'si varsa önce onu kullan
     const redirectParam = route.query.redirect
     const redirectPath = typeof redirectParam === 'string' ? redirectParam : null
 
-    // 🎯 Hedef:
-    // 1) redirect varsa → oraya
-    // 2) yoksa → role admin ise /admin, değilse /menu
     const fallbackPath = user.value?.role === 'admin' ? '/admin' : '/menu'
     const target = redirectPath || fallbackPath
 
@@ -109,7 +104,6 @@ const handleLogin = async () => {
   }
 }
 </script>
-
 
 <style scoped>
 @keyframes bgShift { 0%{transform:translateY(0) scale(1);} 50%{transform:translateY(-2%) scale(1.02);} 100%{transform:translateY(0) scale(1);} }

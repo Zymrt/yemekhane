@@ -7,9 +7,6 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    /**
-     * Aktif oturumu doğrulayıp kullanıcı profilini döndürür.
-     */
     public function profile(Request $request)
     {
         $user = $request->user();
@@ -20,27 +17,22 @@ class UserController extends Controller
             ], 401);
         }
 
-        // 🛠️ DÜZELTME BURADA:
-        // 'meal_price' ve 'created_at' alanlarını listeye ekledik.
-        // Artık Frontend bu verileri görebilecek.
         return response()->json([
             'user' => $user->only([
                 '_id',
                 'name',
                 'surname',
                 'phone',
+                'email', // <--- BURAYA DA EKLEDİM
                 'unit',
                 'balance',
                 'role',
-                'meal_price', // 👈 KRİTİK EKLEME: Kişiye özel yemek fiyatı
-                'created_at'  // 👈 EKLEME: Kayıt tarihi
+                'meal_price',
+                'created_at'
             ])
         ], 200);
     }
 
-    /**
-     * Alias versiyon (isteğe bağlı)
-     */
     public function getProfile(Request $request)
     {
         return $this->profile($request);

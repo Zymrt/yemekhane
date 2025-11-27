@@ -1,28 +1,22 @@
 <template>
   <div class="relative min-h-screen overflow-hidden">
-    <!-- Animated background (welcome ile tutarlı) -->
     <div class="absolute inset-0 bg-[radial-gradient(60%_80%_at_20%_10%,rgba(59,130,246,0.30),transparent),radial-gradient(55%_60%_at_80%_20%,rgba(16,185,129,0.32),transparent),radial-gradient(70%_70%_at_50%_90%,rgba(234,88,12,0.28),transparent)]">
       <div class="absolute inset-0 animate-bgShift opacity-70 bg-gradient-to-br from-blue-500 via-emerald-500 to-orange-500 mix-blend-screen"></div>
     </div>
 
-    <!-- Aurora ribbons -->
     <div class="pointer-events-none absolute -inset-20 blur-3xl opacity-40">
       <div class="aurora aurora-1"></div>
       <div class="aurora aurora-2"></div>
       <div class="aurora aurora-3"></div>
     </div>
 
-    <!-- Particles -->
     <div aria-hidden="true">
       <span v-for="n in 16" :key="n" class="particle"></span>
     </div>
 
-    <!-- Content -->
     <div class="relative z-10 flex min-h-screen items-center justify-center p-6">
       <div class="w-full max-w-xl">
-        <!-- Card -->
         <div class="backdrop-blur-xl bg-white/15 border border-white/20 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.35)] p-6 md:p-8 animate-fadeInUp">
-          <!-- Header -->
           <div class="flex flex-col items-center mb-8 text-center">
             <div class="group relative w-24 h-24 rounded-full bg-white/15 border border-white/30 shadow-xl flex items-center justify-center overflow-hidden">
               <div class="absolute inset-0 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors"></div>
@@ -32,8 +26,8 @@
             <p class="text-white/80 text-sm mt-1 drop-shadow-sm">Mezitli Belediyesi yemekhane sistemine kayıt ol</p>
           </div>
 
-          <!-- Form -->
           <form @submit.prevent="handleRegister" class="space-y-5">
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="name" class="block text-sm font-semibold text-white mb-1">Ad</label>
@@ -56,6 +50,11 @@
               </div>
             </div>
 
+            <div>
+              <label for="email" class="block text-sm font-semibold text-white mb-1">E-posta Adresi</label>
+              <input v-model="email" id="email" type="email" required class="input" placeholder="ornek@mezitli.bel.tr" />
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="password" class="block text-sm font-semibold text-white mb-1">Şifre</label>
@@ -63,7 +62,6 @@
                   <input v-model="password" id="password" :type="show.password ? 'text' : 'password'" required class="input pr-10" placeholder="••••••••" @input="calcStrength"/>
                   <button type="button" class="show-btn" @click="toggle('password')">{{ show.password ? '🙈' : '👁️' }}</button>
                 </div>
-                <!-- Strength bar -->
                 <div class="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
                   <div class="h-full" :style="{ width: strength.width, background: strength.color }"></div>
                 </div>
@@ -77,7 +75,6 @@
               </div>
             </div>
 
-            <!-- File uploader -->
             <div>
               <label for="proof_document" class="block text-sm font-semibold text-white mb-1">Kurum Kimlik / Belgesi (PDF, JPG/PNG)</label>
               <label for="proof_document" class="dropzone">
@@ -116,6 +113,7 @@ import { ref, computed } from 'vue'
 
 const name = ref('')
 const surname = ref('')
+const email = ref('') // <--- YENİ EKLENDİ
 const phone = ref('')
 const unit = ref('')
 const password = ref('')
@@ -172,6 +170,7 @@ const handleRegister = async () => {
   const formData = new FormData()
   formData.append('name', name.value)
   formData.append('surname', surname.value)
+  formData.append('email', email.value) // <--- YENİ EKLENDİ
   formData.append('phone', phone.value)
   formData.append('unit', unit.value)
   formData.append('password', password.value)
