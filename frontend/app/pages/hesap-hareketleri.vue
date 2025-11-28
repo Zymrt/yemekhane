@@ -4,19 +4,19 @@
     <!-- 🔹 Navbar butonları (Aktif sayfayı vurgulamak için class eklendi) -->
     <template #left-buttons>
       <NuxtLink to="/menu" class="btn btn-ghost">
-        ANA SAYFA
+        Ana Sayfa
       </NuxtLink>
       <NuxtLink to="/yorumlar" class="btn btn-ghost">
-        DEĞERLENDİRMELERİM
+        Değerlendirmelerim
       </NuxtLink>
     </template>
 
     <template #right-buttons>
       <NuxtLink to="/hesap-hareketleri" class="btn btn-ghost-active"> <!-- 🌟 Aktif -->
-        HESAP HAREKETLERİ
+        Hesap Hareketleri
       </NuxtLink>
       <NuxtLink to="/bakiye" class="btn btn-primary">
-        BAKİYE YÜKLE
+        Bakiye Yükle
       </NuxtLink>
     </template>
 

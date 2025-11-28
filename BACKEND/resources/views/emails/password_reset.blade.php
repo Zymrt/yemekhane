@@ -12,7 +12,7 @@
             <td style="padding: 40px 20px; text-align: center;">
                 
                 <div style="margin-bottom: 25px;">
-                    <img src="../assets/logo.png" alt="Mezitli Belediyesi" style="width: 100px; height: auto;">
+                    <img src="https://mezitli.bel.tr/wp-content/uploads/2020/07/mezbellogo-favicon.png" alt="Mezitli Belediyesi" style="width: 100px; height: auto;">
                 </div>
 
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow: hidden;">

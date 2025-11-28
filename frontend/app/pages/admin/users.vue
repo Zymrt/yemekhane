@@ -187,9 +187,10 @@ const onUnitChange = (user) => {
 
 // Güncelleme (Fiyat + Birim)
 const updateUser = async (user) => {
-  updatingId.value = user._id
+  updatingId.value = user.id  
+
   try {
-    await $fetch(`${API_BASE}/users/${user._id}/update-price`, {
+    await $fetch(`${API_BASE}/users/${user.id}/update-price`, {
       method: 'POST',
       body: { 
         meal_price: user.meal_price,
@@ -198,12 +199,12 @@ const updateUser = async (user) => {
     })
     alert(`${maskName(user.name)} kullanıcısı güncellendi!`)
   } catch (error) { 
+    console.error(error) 
     alert('Güncelleme hatası!') 
   } finally { 
     updatingId.value = null 
   }
 }
-
 onMounted(fetchData)
 </script>
 

@@ -89,6 +89,9 @@ Route::middleware(['token.auth'])->group(function () {
         Route::delete('/menu/{id}', [MenuController::class, 'deleteMenu']);
         Route::put('/menu/{id}', [MenuController::class, 'updateMenu']);
 
+        // 🔹 MENÜ İSTATİSTİKLERİ (Toplam menü + son güncelleme)
+        Route::get('/menu/stats', [AdminController::class, 'getMenuStats']);
+
         // 👥 KULLANICI YÖNETİMİ
         Route::get('/users/all', [AdminController::class, 'getAllUsers']);
         Route::get('/users/pending', [AdminController::class, 'getPendingUsers']);
@@ -109,6 +112,10 @@ Route::middleware(['token.auth'])->group(function () {
         Route::get('/dashboard-stats', [AdminController::class, 'getDashboardStats']);
         Route::get('/unit-stats', [AdminController::class, 'getUnitStats']);
         Route::get('/finance-stats', [AdminController::class, 'getFinanceStats']);
+
+        // 📤 RAPOR DIŞA AKTARMA
+        Route::get('/unit-stats/export/{format}', [AdminController::class, 'exportUnitStats']);      // excel | pdf
+        Route::get('/finance-stats/export/{format}', [AdminController::class, 'exportFinanceStats']); // excel | pdf
 
         // 🏢 BİRİM YÖNETİMİ
         Route::get('/units', [UnitController::class, 'index']);

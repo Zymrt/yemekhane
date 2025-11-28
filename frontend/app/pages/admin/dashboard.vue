@@ -13,7 +13,7 @@
         <p class="text-slate-400 mt-2 ml-1">Sistem verilerini ve finansal durumu detaylı inceleyin.</p>
       </div>
       
-      <!-- 👇 LOG KAYITLARI BUTONU BURAYA EKLENDİ 👇 -->
+      <!-- LOG KAYITLARI & GERİ DÖN -->
       <div class="flex items-center gap-3">
         <NuxtLink 
           to="/admin/logs" 
@@ -43,7 +43,6 @@
             ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
             : 'text-slate-400 hover:text-white hover:bg-white/5'"
         >
-          <!-- İkonlar, component olarak dinamik render ediliyor -->
           <component :is="tab.icon" class="w-4 h-4" /> 
           {{ tab.label }}
         </button>
@@ -97,7 +96,10 @@
             </div>
             <div class="text-3xl font-black text-white mb-2">{{ stats?.userStats?.approved || 0 }}</div>
             <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-               <div class="h-full bg-gradient-to-r from-emerald-600 to-teal-500" :style="`width: ${(stats?.userStats?.approved / stats?.userStats?.total) * 100}%`"></div>
+               <div 
+                 class="h-full bg-gradient-to-r from-emerald-600 to-teal-500" 
+                 :style="`width: ${(stats?.userStats?.total ? (stats?.userStats?.approved / stats?.userStats?.total) * 100 : 0)}%`"
+               ></div>
             </div>
           </div>
 
@@ -124,7 +126,9 @@
                   <li v-for="(item, i) in stats.menuStats.today.items" :key="i" class="flex items-center gap-3 text-slate-200 text-sm">
                     <span class="w-2 h-2 bg-indigo-400 rounded-full shadow-[0_0_10px_rgba(129,140,248,0.5)]"></span>
                     <span class="font-medium">{{ item.name }}</span>
-                    <span class="text-[10px] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded ml-auto font-mono">{{ item.cal }} cal</span>
+                    <span class="text-[10px] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded ml-auto font-mono">
+                      {{ item.cal }} cal
+                    </span>
                   </li>
                 </ul>
              </div>
@@ -138,15 +142,70 @@
           <div class="col-span-1 sm:col-span-2 lg:col-span-2 bg-gradient-to-br from-[#1a1a1a] to-[#121212] border border-white/5 rounded-3xl p-6 flex flex-col justify-center items-center text-center relative overflow-hidden group">
              <div class="absolute inset-0 bg-gradient-to-r from-indigo-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition duration-500"></div>
              
-             <div class="relative z-10">
-               <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3 border border-white/10 group-hover:scale-110 transition-transform">
-                 <DocumentArrowDownIcon class="w-6 h-6 text-slate-300" />
+             <div class="relative z-10 space-y-4 w-full max-w-xl">
+               <div>
+                 <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3 border border-white/10 group-hover:scale-110 transition-transform">
+                   <DocumentArrowDownIcon class="w-6 h-6 text-slate-300" />
+                 </div>
+                 <h3 class="text-lg font-bold text-white mb-1">Verileri Dışa Aktar</h3>
+                 <p class="text-xs text-slate-400 mb-3 max-w-xs mx-auto">
+                   Sistem raporlarını Excel (CSV) veya PDF formatında indirebilirsiniz.
+                 </p>
                </div>
-               <h3 class="text-lg font-bold text-white mb-1">Verileri Dışa Aktar</h3>
-               <p class="text-xs text-slate-400 mb-5 max-w-xs mx-auto">Tüm sistem verilerini Excel veya PDF formatında raporlayın.</p>
-               <button class="bg-white text-black hover:bg-slate-200 px-6 py-2.5 rounded-xl text-sm font-bold transition shadow-lg shadow-white/10">
-                 Rapor Oluştur
-               </button>
+
+               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                 <!-- Birim Raporu -->
+                 <div class="bg-white/5 border border-white/10 rounded-2xl p-4">
+                   <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                     <BuildingOffice2Icon class="w-4 h-4 text-purple-300" />
+                     Birim Raporu
+                   </div>
+                   <div class="flex flex-wrap gap-2">
+                     <button
+                       @click="downloadReport('/api/admin/unit-stats/export/excel', 'birim-raporu.csv')"
+                       :disabled="exporting"
+                       class="px-3 py-1.5 bg-white text-black rounded-lg text-xs font-bold hover:bg-slate-200 transition disabled:opacity-60"
+                     >
+                       {{ exporting ? 'İndiriliyor...' : 'Excel' }}
+                     </button>
+                     <button
+                       @click="downloadReport('/api/admin/unit-stats/export/pdf', 'birim-raporu.pdf')"
+                       :disabled="exporting"
+                       class="px-3 py-1.5 bg-slate-900 text-white border border-white/20 rounded-lg text-xs font-bold hover:bg-slate-800 transition disabled:opacity-60"
+                     >
+                       {{ exporting ? 'İndiriliyor...' : 'PDF' }}
+                     </button>
+                   </div>
+                 </div>
+
+                 <!-- Finans Raporu -->
+                 <div class="bg-white/5 border border-white/10 rounded-2xl p-4">
+                   <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                     <WalletIcon class="w-4 h-4 text-emerald-300" />
+                     Finans Raporu
+                   </div>
+                   <div class="flex flex-wrap gap-2">
+                     <button
+                       @click="downloadReport('/api/admin/finance-stats/export/excel', 'finans-raporu.csv')"
+                       :disabled="exporting"
+                       class="px-3 py-1.5 bg-white text-black rounded-lg text-xs font-bold hover:bg-slate-200 transition disabled:opacity-60"
+                     >
+                       {{ exporting ? 'İndiriliyor...' : 'Excel' }}
+                     </button>
+                     <button
+                       @click="downloadReport('/api/admin/finance-stats/export/pdf', 'finans-raporu.pdf')"
+                       :disabled="exporting"
+                       class="px-3 py-1.5 bg-slate-900 text-white border border-white/20 rounded-lg text-xs font-bold hover:bg-slate-800 transition disabled:opacity-60"
+                     >
+                       {{ exporting ? 'İndiriliyor...' : 'PDF' }}
+                     </button>
+                   </div>
+                 </div>
+               </div>
+
+               <p v-if="exportError" class="text-[11px] text-red-400 bg-red-500/10 border border-red-500/30 px-3 py-2 rounded-xl">
+                 {{ exportError }}
+               </p>
              </div>
           </div>
 
@@ -165,9 +224,14 @@
                  <div class="p-2 bg-purple-500/20 rounded-lg text-purple-300"><BuildingOffice2Icon class="w-6 h-6" /></div>
                  Birim Yönetimi
                </h3>
-               <p class="text-sm text-purple-200/60 mt-2 max-w-lg">Birimlere özel fiyatlandırma yapabilir, yeni departmanlar ekleyebilir veya mevcut yapılandırmayı düzenleyebilirsiniz.</p>
+               <p class="text-sm text-purple-200/60 mt-2 max-w-lg">
+                 Birimlere özel fiyatlandırma yapabilir, yeni departmanlar ekleyebilir veya mevcut yapılandırmayı düzenleyebilirsiniz.
+               </p>
             </div>
-            <NuxtLink to="/admin/units" class="relative z-10 bg-purple-600 hover:bg-purple-500 text-white px-6 py-3 rounded-xl text-sm font-bold transition shadow-lg shadow-purple-900/30 flex items-center gap-2">
+            <NuxtLink 
+              to="/admin/units" 
+              class="relative z-10 bg-purple-600 hover:bg-purple-500 text-white px-6 py-3 rounded-xl text-sm font-bold transition shadow-lg shadow-purple-900/30 flex items-center gap-2"
+            >
               Düzenle <ArrowRightIcon class="w-4 h-4" />
             </NuxtLink>
           </div>
@@ -213,7 +277,11 @@
               <FireIcon class="w-4 h-4 text-orange-500" /> Popüler Lezzetler
             </h3>
             <div class="space-y-3">
-              <div v-for="(item, index) in stats?.menuStats?.topItems" :key="index" class="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-orange-500/30 transition group">
+              <div 
+                v-for="(item, index) in stats?.menuStats?.topItems" 
+                :key="index" 
+                class="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-orange-500/30 transition group"
+              >
                 <div class="flex items-center gap-4">
                   <span class="w-8 h-8 flex items-center justify-center bg-orange-500/10 text-orange-400 rounded-lg font-black text-sm group-hover:scale-110 transition-transform">
                     {{ index + 1 }}
@@ -222,7 +290,9 @@
                 </div>
                 <span class="text-xs text-slate-500 bg-black/20 px-2 py-1 rounded">{{ item.count }} kez</span>
               </div>
-              <div v-if="!stats?.menuStats?.topItems?.length" class="text-slate-500 text-center py-10">Yeterli veri yok.</div>
+              <div v-if="!stats?.menuStats?.topItems?.length" class="text-slate-500 text-center py-10">
+                Yeterli veri yok.
+              </div>
             </div>
           </div>
 
@@ -230,7 +300,9 @@
           <div class="space-y-6">
              <div class="bg-[#121212]/60 border border-white/5 rounded-3xl p-8 text-center backdrop-blur-md relative overflow-hidden group">
                 <div class="absolute top-0 right-0 w-40 h-40 bg-teal-500/10 rounded-full blur-[80px] -mr-10 -mt-10 transition group-hover:bg-teal-500/20"></div>
-                <div class="text-5xl font-black text-white mb-2 tracking-tighter">{{ stats?.menuStats?.total || 0 }}</div>
+                <div class="text-5xl font-black text-white mb-2 tracking-tighter">
+                  {{ stats?.menuStats?.total || 0 }}
+                </div>
                 <div class="text-sm font-bold text-teal-400 uppercase tracking-wide">Toplam Kayıtlı Menü</div>
              </div>
 
@@ -272,6 +344,9 @@ const stats = ref(null)
 const unitStats = ref([])
 const loading = ref(true)
 
+const exporting = ref(false)
+const exportError = ref(null)
+
 // Sekme Konfigürasyonu
 const tabs = [
   { id: 'genel', label: 'Genel Bakış', icon: HomeIcon },
@@ -280,7 +355,8 @@ const tabs = [
   { id: 'finans', label: 'Bakiye & Finans', icon: WalletIcon },
 ]
 
-const formatCurrency = (val) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val || 0)
+const formatCurrency = (val) => 
+  new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val || 0)
 
 const fetchAllData = async () => {
   loading.value = true
@@ -300,6 +376,37 @@ const fetchAllData = async () => {
   }
 }
 
+const downloadReport = async (url, filename) => {
+  try {
+    exporting.value = true
+    exportError.value = null
+
+    const res = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+    })
+
+    if (!res.ok) {
+      throw new Error('İndirme başarısız oldu')
+    }
+
+    const blob = await res.blob()
+    const link = document.createElement('a')
+    const objectUrl = URL.createObjectURL(blob)
+    link.href = objectUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(objectUrl)
+  } catch (err) {
+    console.error('Rapor indirme hatası:', err)
+    exportError.value = 'Rapor indirilemedi. Lütfen tekrar deneyin.'
+  } finally {
+    exporting.value = false
+  }
+}
+
 onMounted(fetchAllData)
 </script>
 
@@ -314,5 +421,8 @@ onMounted(fetchAllData)
 }
 
 .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(10px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
 </style>
