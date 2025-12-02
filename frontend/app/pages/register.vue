@@ -20,10 +20,10 @@
           <div class="flex flex-col items-center mb-8 text-center">
             <div class="group relative w-24 h-24 rounded-full bg-white/15 border border-white/30 shadow-xl flex items-center justify-center overflow-hidden">
               <div class="absolute inset-0 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors"></div>
-              <img src="/assets/logo.jpg" alt="Mezitli Belediyesi" class="relative w-16 h-16 object-contain transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 will-change-transform"/>
+              <img src="/assets/logo.jpg" alt="Logo" class="relative w-16 h-16 object-contain transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 will-change-transform"/>
             </div>
             <h2 class="text-3xl font-extrabold text-white mt-5 drop-shadow-sm tracking-tight">Yeni Hesap Oluştur</h2>
-            <p class="text-white/80 text-sm mt-1 drop-shadow-sm">Mezitli Belediyesi yemekhane sistemine kayıt ol</p>
+            <p class="text-white/80 text-sm mt-1 drop-shadow-sm">Yemekhane sistemine kayıt ol</p>
           </div>
 
           <form @submit.prevent="handleRegister" class="space-y-5">
@@ -52,7 +52,7 @@
 
             <div>
               <label for="email" class="block text-sm font-semibold text-white mb-1">E-posta Adresi</label>
-              <input v-model="email" id="email" type="email" required class="input" placeholder="ornek@mezitli.bel.tr" />
+              <input v-model="email" id="email" type="email" required class="input" placeholder="ornek@gmail.com" />
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

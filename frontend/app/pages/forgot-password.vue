@@ -36,7 +36,7 @@
                 v-model="form.email" 
                 id="email"
                 type="email" 
-                placeholder="ornek@mezitli.bel.tr" 
+                placeholder="ornek@gmail.com" 
                 required
                 class="input"
               >

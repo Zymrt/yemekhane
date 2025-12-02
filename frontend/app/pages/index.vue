@@ -27,7 +27,7 @@
               <div class="absolute inset-0 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors"></div>
               <img
                 src="/assets/logo.jpg"
-                alt="Mezitli Belediyesi"
+                alt="Logo"
                 class="relative w-28 h-28 object-contain transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 will-change-transform"
               />
             </div>

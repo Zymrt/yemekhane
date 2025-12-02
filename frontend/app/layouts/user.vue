@@ -24,8 +24,8 @@
 
         <!-- Logo -->
         <img
-          src="https://mezitli.bel.tr/wp-content/uploads/2020/07/mezbellogo-1.png"
-          alt="Mezitli Belediyesi"
+          src="https://www.google.com/url?sa=i&url=https%3A%2F%2Ftr.pinterest.com%2Fpin%2F640848221969926126%2F&psig=AOvVaw26I-1ShSZNYbDpDU18vp7L&ust=1764768280455000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCLDlnaaAn5EDFQAAAAAdAAAAABAE"
+          alt="Logo"
           class="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-xl hover:scale-110 transition-transform duration-300"
         />
 

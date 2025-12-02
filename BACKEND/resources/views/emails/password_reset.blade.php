@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Şifre Sıfırlama - T.C. Mezitli Belediyesi</title>
+    <title>Şifre Sıfırlama</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
 
@@ -12,7 +12,7 @@
             <td style="padding: 40px 20px; text-align: center;">
                 
                 <div style="margin-bottom: 25px;">
-                    <img src="https://mezitli.bel.tr/wp-content/uploads/2020/07/mezbellogo-favicon.png" alt="Mezitli Belediyesi" style="width: 100px; height: auto;">
+                    <img src="https://www.google.com/url?sa=i&url=https%3A%2F%2Ftr.pinterest.com%2Fpin%2F640848221969926126%2F&psig=AOvVaw26I-1ShSZNYbDpDU18vp7L&ust=1764768280455000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCLDlnaaAn5EDFQAAAAAdAAAAABAE" alt="Logo" style="width: 100px; height: auto;">
                 </div>
 
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow: hidden;">
@@ -27,7 +27,7 @@
                             
                             <p style="margin: 0 0 30px; color: #64748b; font-size: 16px; line-height: 1.6;">
                                 Merhaba, <br>
-                                Mezitli Belediyesi Yemekhane Sistemi hesabınız için şifre sıfırlama talebinde bulundunuz. Aşağıdaki doğrulama kodunu kullanarak işleminizi tamamlayabilirsiniz.
+                                Yemekhane Sistemi hesabınız için şifre sıfırlama talebinde bulundunuz. Aşağıdaki doğrulama kodunu kullanarak işleminizi tamamlayabilirsiniz.
                             </p>
 
                             <div style="background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; display: inline-block; margin-bottom: 30px;">
@@ -45,10 +45,10 @@
                     <tr>
                         <td style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
                             <p style="margin: 0; color: #64748b; font-size: 12px;">
-                                &copy; {{ date('Y') }} Mezitli Belediyesi Bilgi İşlem Müdürlüğü
+                                &copy; {{ date('Y') }} ZMC
                             </p>
                             <p style="margin: 5px 0 0; font-size: 12px;">
-                                <a href="https://mezitli.bel.tr" style="color: #0099ff; text-decoration: none;">www.mezitli.bel.tr</a>
+                                <a href="https://tr.wikipedia.org/wiki/Anasayfa" style="color: #0099ff; text-decoration: none;">Link bölümü</a>
                             </p>
                         </td>
                     </tr>
