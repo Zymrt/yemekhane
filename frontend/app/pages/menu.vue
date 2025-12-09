@@ -53,6 +53,12 @@
               </div>
             </div>
 
+            <!-- 🆕 EKLENEN BLOK: E-POSTA -->
+            <div>
+              <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">E-posta</p>
+              <p class="text-sm font-medium text-gray-700 break-all">{{ user?.email || '-' }}</p>
+            </div>
+
             <div class="pt-4 mt-2 border-t border-gray-200/40">
               <p class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Cüzdan Bakiyesi</p>
               <p 

@@ -23,7 +23,7 @@ class UserController extends Controller
                 'name',
                 'surname',
                 'phone',
-                'email', // <--- BURAYA DA EKLEDİM
+                'email', 
                 'unit',
                 'balance',
                 'role',
