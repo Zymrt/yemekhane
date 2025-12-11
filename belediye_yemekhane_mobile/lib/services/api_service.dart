@@ -13,10 +13,7 @@ import '../views/login_view.dart';
 // --------------------------------------------------------
 // SABİTLER
 // --------------------------------------------------------
-// NOT: Laravel rotaları '/api' ile başlar.
-// Burası doğru: http://10.0.2.2:8000/api
 const String BASE_URL = 'http://10.0.2.2:8000/api';
-// Cookie'ler domain bazlıdır, '/api' içermez.
 const String BASE_ORIGIN = 'http://10.0.2.2:8000';
 
 // --------------------------------------------------------
@@ -32,7 +29,6 @@ class ApiService {
         baseUrl: BASE_URL,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
-        // Laravel genelde JSON bekler
         contentType: Headers.jsonContentType, 
         responseType: ResponseType.json,
       ),
@@ -56,7 +52,6 @@ class ApiService {
     dio.interceptors.add(
       QueuedInterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Cookie'den token'ı alıp Header'a ekleyelim
           final cookies = await cookieJar.loadForRequest(Uri.parse(BASE_ORIGIN));
 
           final accessToken = cookies.firstWhere(
@@ -71,7 +66,6 @@ class ApiService {
           handler.next(options);
         },
         onError: (DioException err, handler) async {
-          // 401 (Yetkisiz) hatasında çıkış yap
           if (err.response?.statusCode == 401 || err.response?.statusCode == 403) {
             print("Oturum süresi doldu, çıkış yapılıyor...");
             await cookieJar.deleteAll();
@@ -100,7 +94,6 @@ class ApiService {
       await cookieJar.deleteAll();
       return response;
     } catch (e) {
-      // Hata alsa bile local cookie'leri silelim
       await cookieJar.deleteAll();
       rethrow;
     }
@@ -143,12 +136,11 @@ class ApiService {
     return dio.get('/reviews/today');
   }
 
-  // Yeni yorum gönder
-  Future<Response> postReview(int menuId, String comment, int rating) {
+  // 🛠️ DÜZELTİLDİ: Yorum gönderme (Menü ID'siz, rating ve comment alıyor)
+  Future<Response> postReview(int rating, String comment) {
     return dio.post(
       '/reviews',
       data: {
-        'menu_id': menuId,
         'comment': comment,
         'rating': rating,
       },
