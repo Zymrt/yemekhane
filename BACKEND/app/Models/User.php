@@ -6,8 +6,8 @@ use MongoDB\Laravel\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Carbon; // Carbon kütüphanesi eklendi
-use App\Models\Order; // Order Model ilişki kontrolü için eklendi
+use Illuminate\Support\Carbon;
+use App\Models\Order;
 
 class User extends Model implements Authenticatable
 {
@@ -20,17 +20,17 @@ class User extends Model implements Authenticatable
      * Toplu atamaya (Mass Assignment) izin verilen alanlar.
      */
     protected $fillable = [
-        'name', 
-        'surname', 
-        'phone', 
+        'name',
+        'surname',
+        'phone',
         'email',
-        'password', 
-        'unit', 
-        'balance', 
-        'status', 
+        'password',
+        'unit',
+        'balance',
+        'status',
         'document_path',
-        'role', 
-        'meal_price'
+        'role',
+        'meal_price',
     ];
 
     /**
@@ -45,34 +45,29 @@ class User extends Model implements Authenticatable
     protected $hidden = ['password'];
 
     // -----------------------------------------------------------------
-    // 🟢 HAS_PURCHASED ACCESSOR (ÖNEMLİ EKLENTİ)
+    // 🟢 has_purchased => JSON'a HER ZAMAN eklensin
     // -----------------------------------------------------------------
-
-    // 'has_purchased' alanını her zaman JSON çıktısına ekler.
     protected $appends = ['has_purchased'];
 
     /**
-     * Kullanıcının bugün için yemek satın alıp almadığını kontrol eden Accessor.
-     *
-     * @return bool
+     * Kullanıcının BUGÜN için yemek satın alıp almadığını döndürür.
+     * Order koleksiyonunda bugünün tarihine göre kontrol eder.
      */
     public function getHasPurchasedAttribute(): bool
-    {
-        // Bugünün başlangıç ve bitiş zamanları (Günlük sıfırlamayı sağlar)
-        $startOfDay = Carbon::today()->startOfDay();
-        $endOfDay = Carbon::today()->endOfDay();
+{
+    try {
+        // İstanbul saatine göre bugünün tarihi (YIL-AY-GÜN)
+        $today = Carbon::today('Europe/Istanbul')->toDateString();
 
-        // SADECE BUGÜNE AİT, ÖDENMİŞ (paid) sipariş kaydını arıyoruz
-        // Eğer Order modeli yoksa veya yanlış yoldaysa bu kısım hata verir.
-        // Hata durumunda default olarak false dönecek şekilde tasarlanmıştır.
-        try {
-            return Order::where('user_id', (string)$this->id)
-                ->where('status', 'paid') 
-                ->whereBetween('date', [$startOfDay, $endOfDay])
-                ->exists();
-        } catch (\Exception $e) {
-            // Eğer veritabanı veya model hatası olursa, güvenli tarafta kalıp false döndür.
-            return false;
-        }
+        // Mongo kullanıcı ID'si (primary key)
+        $userId = (string) $this->getKey();   // 🔥 ARTIK DOĞRU!
+
+        return Order::where('user_id', $userId)
+            ->where('status', 'paid')              // sipariş ödenmiş olacak
+            ->whereDate('date', $today)            // order.date = bugünün menü tarihi
+            ->exists();
+    } catch (\Exception $e) {
+        return false;
     }
+}
 }

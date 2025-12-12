@@ -11,25 +11,31 @@ class UserController extends Controller
     {
         $user = $request->user();
 
-        if (! $user) {
+        if (!$user) {
             return response()->json([
                 'message' => 'Aktif oturum bulunamadı.'
             ], 401);
         }
 
+        // Kullanıcıdan göstermek istediğimiz alanlar
+        $userData = $user->only([
+            '_id',
+            'name',
+            'surname',
+            'phone',
+            'email',
+            'unit',
+            'balance',
+            'role',
+            'meal_price',
+            'created_at',
+        ]);
+
+        // 🔥 Modeldeki accessor'dan gelen has_purchased bilgisini EKLİYORUZ
+        $userData['has_purchased'] = $user->has_purchased;
+
         return response()->json([
-            'user' => $user->only([
-                '_id',
-                'name',
-                'surname',
-                'phone',
-                'email', 
-                'unit',
-                'balance',
-                'role',
-                'meal_price',
-                'created_at'
-            ])
+            'user' => $userData,
         ], 200);
     }
 

@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "belediye_yemekhane_mobile",
+            "cwd": "belediye_yemekhane_mobile",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "belediye_yemekhane_mobile (profile mode)",
+            "cwd": "belediye_yemekhane_mobile",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "belediye_yemekhane_mobile (release mode)",
+            "cwd": "belediye_yemekhane_mobile",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}

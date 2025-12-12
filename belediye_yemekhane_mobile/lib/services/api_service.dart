@@ -2,12 +2,11 @@
 
 import 'dart:io';
 
-import 'package:dio/dio.dart';
+import 'package:dio/dio.dart' as dio; // S A D E C E alias
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:get/get.dart' hide Response;
-
 import '../views/login_view.dart';
 
 // --------------------------------------------------------
@@ -20,56 +19,66 @@ const String BASE_ORIGIN = 'http://10.0.2.2:8000';
 // ANA SERVİS SINIFI
 // --------------------------------------------------------
 class ApiService {
-  late final Dio dio;
+  late final dio.Dio _dio; // aliaslı Dio
   late final PersistCookieJar cookieJar;
 
   ApiService() {
-    dio = Dio(
-      BaseOptions(
+    _dio = dio.Dio(
+      dio.BaseOptions(
         baseUrl: BASE_URL,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
-        contentType: Headers.jsonContentType, 
-        responseType: ResponseType.json,
+        contentType: dio.Headers.jsonContentType,
+        responseType: dio.ResponseType.json,
+        headers: {
+          'Accept': 'application/json', // 🔥 Laravel'e "JSON ver" de
+        },
       ),
     );
   }
 
+  // --------------------------------------------------------
+  // COOKIE & AUTH SETUP
+  // --------------------------------------------------------
   Future<void> initCookies() async {
     final appDocDir = await getApplicationDocumentsDirectory();
-    final String appDocPath = appDocDir.path;
+    final appDocPath = appDocDir.path;
 
-    cookieJar = PersistCookieJar(
-      storage: FileStorage("$appDocPath/.cookies/"),
-    );
+    cookieJar = PersistCookieJar(storage: FileStorage("$appDocPath/.cookies/"));
 
-    dio.interceptors.clear();
+    _dio.interceptors.clear();
 
     // 1. Cookie Yönetimi
-    dio.interceptors.add(CookieManager(cookieJar));
+    _dio.interceptors.add(CookieManager(cookieJar));
 
-    // 2. Token ve Hata Yönetimi
-    dio.interceptors.add(
-      QueuedInterceptorsWrapper(
+    // 2. Token Middleware
+    _dio.interceptors.add(
+      dio.QueuedInterceptorsWrapper(
         onRequest: (options, handler) async {
-          final cookies = await cookieJar.loadForRequest(Uri.parse(BASE_ORIGIN));
+          // İstek atılmadan önce kayıtlı cookielerden token'ı bulmaya çalış
+          final cookies = await cookieJar.loadForRequest(
+            Uri.parse(BASE_ORIGIN),
+          );
 
           final accessToken = cookies.firstWhere(
             (cookie) => cookie.name == 'access_token',
             orElse: () => Cookie('access_token', ''),
           );
 
+          // Token varsa Header'a ekle (Laravel JWT/Sanctum için)
           if (accessToken.value.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer ${accessToken.value}';
           }
 
           handler.next(options);
         },
-        onError: (DioException err, handler) async {
-          if (err.response?.statusCode == 401 || err.response?.statusCode == 403) {
-            print("Oturum süresi doldu, çıkış yapılıyor...");
+        onError: (err, handler) async {
+          // 401 (Yetkisiz) veya 403 (Yasaklı) gelirse çıkış yap
+          if (err.response?.statusCode == 401 ||
+              err.response?.statusCode == 403) {
+            print("Oturum sona erdi → Logout yapılıyor...");
             await cookieJar.deleteAll();
-            Get.offAll(() => const LoginView());
+            Get.offAll(() => LoginView());
           }
           handler.next(err);
         },
@@ -78,19 +87,16 @@ class ApiService {
   }
 
   // --------------------------------------------------------
-  // AUTH (KİMLİK) İŞLEMLERİ
+  // AUTH İŞLEMLERİ
   // --------------------------------------------------------
 
-  Future<Response> login(String phone, String password) {
-    return dio.post(
-      '/login',
-      data: {'phone': phone, 'password': password},
-    );
+  Future<dio.Response> login(String phone, String password) {
+    return _dio.post('/login', data: {'phone': phone, 'password': password});
   }
 
-  Future<Response> logout() async {
+  Future<dio.Response> logout() async {
     try {
-      final response = await dio.post('/logout');
+      final response = await _dio.post('/logout');
       await cookieJar.deleteAll();
       return response;
     } catch (e) {
@@ -99,78 +105,74 @@ class ApiService {
     }
   }
 
-  Future<Response> register(Map<String, dynamic> data) {
-    return dio.post('/register', data: data);
+  // 🆕 KAYIT METODU (Dosya Yükleme İçin)
+  // AuthController içinde hazırladığın dio.FormData buraya geliyor.
+  Future<dio.Response> registerUser(dio.FormData formData) {
+    return _dio.post(
+      '/register',
+      data: formData,
+      options: dio.Options(
+        followRedirects: false, // 302'yi takip etme
+        validateStatus: (status) {
+          // ✅ Sadece 2xx (200-299) başarılı
+          return status != null && status >= 200 && status < 300;
+        },
+      ),
+    );
   }
 
   // --------------------------------------------------------
-  // KULLANICI & PROFİL
+  // USER / PROFILE
   // --------------------------------------------------------
-
-  Future<Response> getProfile() {
-    return dio.get('/user/profile');
+  Future<dio.Response> getProfile() {
+    return _dio.get('/user/profile');
   }
 
   // --------------------------------------------------------
-  // MENÜ İŞLEMLERİ
+  // MENÜ
   // --------------------------------------------------------
-
-  Future<Response> getMenuToday() {
-    return dio.get('/menu/today');
+  Future<dio.Response> getMenuToday() {
+    return _dio.get('/menu/today');
   }
 
   // --------------------------------------------------------
-  // DUYURULAR (HERKESE AÇIK)
+  // DUYURULAR
   // --------------------------------------------------------
-
-  Future<Response> getAnnouncements() {
-    return dio.get('/announcements');
+  Future<dio.Response> getAnnouncements() {
+    return _dio.get('/announcements');
   }
 
   // --------------------------------------------------------
   // YORUM SİSTEMİ
   // --------------------------------------------------------
 
-  // Günün yemeklerine yapılan yorumlar
-  Future<Response> getTodayReviews() {
-    return dio.get('/reviews/today');
+  /// 🟢 BUGÜNÜN YORUMU (Varsa getirir)
+  Future<dio.Response> getTodayReview() {
+    return _dio.get('/reviews/today');
   }
 
-  // 🛠️ DÜZELTİLDİ: Yorum gönderme (Menü ID'siz, rating ve comment alıyor)
-  Future<Response> postReview(int rating, String comment) {
-    return dio.post(
-      '/reviews',
-      data: {
-        'comment': comment,
-        'rating': rating,
-      },
-    );
+  /// ⭐ Yorum Gönder / Güncelle
+  Future<dio.Response> postReview(int rating, String comment) {
+    return _dio.post('/reviews', data: {'rating': rating, 'comment': comment});
   }
 
-  // Benim yaptığım yorumlar
-  Future<Response> getMyReviews() {
-    return dio.get('/reviews/my-reviews');
+  /// 🧾 Kullanıcının geçmiş yorumları
+  Future<dio.Response> getMyReviews() {
+    return _dio.get('/reviews/my-reviews');
   }
 
   // --------------------------------------------------------
-  // SATIN ALMA VE CÜZDAN
+  // SATIN ALMA / CÜZDAN
   // --------------------------------------------------------
-
-  // Yemek satın al (Bakiyeden düşer)
-  Future<Response> purchaseOrder() {
-    return dio.post('/order/purchase');
+  Future<dio.Response> purchaseOrder() {
+    return _dio.post('/order/purchase');
   }
 
-  // Geçmiş hesap hareketleri (Transactions)
-  Future<Response> getTransactions() {
-    return dio.get('/transactions');
+  Future<dio.Response> getTransactions() {
+    return _dio.get('/transactions');
   }
 
-  // Para Yükleme Başlat (Mock Payment)
-  Future<Response> startPayment(double amount) {
-    return dio.post(
-      '/payment/start',
-      data: {'amount': amount},
-    );
+  Future<dio.Response> startPayment(double amount) {
+    return _dio.post('/payment/start', data: {'amount': amount});
   }
 }
