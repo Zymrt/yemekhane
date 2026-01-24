@@ -1,7 +1,5 @@
 // lib/services/api_service.dart
 
-import 'dart:io';
-
 import 'package:dio/dio.dart' as dio; // S A D E C E alias
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';

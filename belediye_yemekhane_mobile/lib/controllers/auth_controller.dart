@@ -95,18 +95,14 @@ class AuthController extends GetxController {
       ]);
 
       // Dosya varsa FormData'ya ekle
-      if (document != null) {
-        final String fileName = document.path
-            .split(Platform.pathSeparator)
-            .last;
+      final String fileName = document.path.split(Platform.pathSeparator).last;
 
-        formData.files.add(
-          MapEntry(
-            'proof_document', // 🔥 backend'in beklediği alan adı
-            await dio.MultipartFile.fromFile(document.path, filename: fileName),
-          ),
-        );
-      }
+      formData.files.add(
+        MapEntry(
+          'proof_document', // 🔥 backend'in beklediği alan adı
+          await dio.MultipartFile.fromFile(document.path, filename: fileName),
+        ),
+      );
 
       // Servise gönder
       final response = await _apiService.registerUser(formData);

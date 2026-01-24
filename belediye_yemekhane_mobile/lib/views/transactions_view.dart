@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import '../services/api_service.dart';
 
 class TransactionItem {
-  final String type;        // deposit / purchase vs.
+  final String type; // deposit / purchase vs.
   final double amount;
   final DateTime date;
   final String description;
@@ -22,7 +22,7 @@ class TransactionItem {
 
     DateTime parsedDate =
         DateTime.tryParse(json['created_at']?.toString() ?? '') ??
-            DateTime.now();
+        DateTime.now();
 
     return TransactionItem(
       type: json['type']?.toString() ?? 'unknown',
@@ -74,8 +74,7 @@ class _TransactionsViewState extends State<TransactionsView> {
 
       _items = listJson
           .whereType<Map>()
-          .map((e) => TransactionItem.fromJson(
-              Map<String, dynamic>.from(e as Map)))
+          .map((e) => TransactionItem.fromJson(Map<String, dynamic>.from(e)))
           .toList();
     } catch (e) {
       _error = 'Hesap hareketleri alınırken hata oluştu.';
@@ -110,76 +109,74 @@ class _TransactionsViewState extends State<TransactionsView> {
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
-                ? ListView(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Center(
-                          child: Text(
-                            _error!,
-                            style: const TextStyle(color: Colors.red),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+            ? ListView(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Center(
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
                       ),
-                    ],
-                  )
-                : _items.isEmpty
-                    ? ListView(
-                        children: const [
-                          SizedBox(height: 80),
-                          Center(
-                            child: Text(
-                              'Henüz hiç hareket yok.',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        ],
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemBuilder: (context, index) {
-                          final tx = _items[index];
-                          return ListTile(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            tileColor: Colors.white,
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  _amountColor(tx.amount).withOpacity(0.1),
-                              child: Icon(
-                                tx.amount >= 0
-                                    ? Icons.arrow_downward
-                                    : Icons.arrow_upward,
-                                color: _amountColor(tx.amount),
-                              ),
-                            ),
-                            title: Text(
-                              tx.description.isEmpty
-                                  ? tx.type.toUpperCase()
-                                  : tx.description,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            subtitle: Text(
-                              '${tx.date.toLocal()}'
-                                  .split('.')
-                                  .first, // basit tarih-saat
-                              style: TextStyle(color: Colors.grey.shade600),
-                            ),
-                            trailing: Text(
-                              _formatAmount(tx.amount),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: _amountColor(tx.amount),
-                              ),
-                            ),
-                          );
-                        },
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemCount: _items.length,
+                    ),
+                  ),
+                ],
+              )
+            : _items.isEmpty
+            ? ListView(
+                children: const [
+                  SizedBox(height: 80),
+                  Center(
+                    child: Text(
+                      'Henüz hiç hareket yok.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ],
+              )
+            : ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemBuilder: (context, index) {
+                  final tx = _items[index];
+                  return ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    tileColor: Colors.white,
+                    leading: CircleAvatar(
+                      backgroundColor: _amountColor(tx.amount).withOpacity(0.1),
+                      child: Icon(
+                        tx.amount >= 0
+                            ? Icons.arrow_downward
+                            : Icons.arrow_upward,
+                        color: _amountColor(tx.amount),
                       ),
+                    ),
+                    title: Text(
+                      tx.description.isEmpty
+                          ? tx.type.toUpperCase()
+                          : tx.description,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      '${tx.date.toLocal()}'
+                          .split('.')
+                          .first, // basit tarih-saat
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                    trailing: Text(
+                      _formatAmount(tx.amount),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _amountColor(tx.amount),
+                      ),
+                    ),
+                  );
+                },
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemCount: _items.length,
+              ),
       ),
       backgroundColor: Colors.grey[100],
     );

@@ -214,10 +214,10 @@ class HomeController extends GetxController {
         // my_review -> review -> data anahtar sırasına göre kontrol ediyoruz.
         dynamic reviewData;
         if (data is Map) {
-          if (data.containsKey('my_review'))
+          if (data.containsKey('my_review')) {
             reviewData =
                 data['my_review']; // 👈 API cevabınızdaki KRİTİK DÜZELTME
-          else if (data.containsKey('review'))
+          } else if (data.containsKey('review'))
             reviewData = data['review'];
           else if (data.containsKey('data'))
             reviewData = data['data'];
@@ -309,8 +309,9 @@ class HomeController extends GetxController {
       currentRating.value = 0.0;
     } on DioException catch (e) {
       String errorMsg = "Yorum gönderilirken hata oluştu.";
-      if (e.response?.statusCode == 400)
+      if (e.response?.statusCode == 400) {
         errorMsg = "Bugün için yorum hakkın dolmuş olabilir.";
+      }
       Get.snackbar(
         "Hata",
         errorMsg,

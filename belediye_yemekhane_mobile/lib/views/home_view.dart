@@ -362,7 +362,7 @@ class HomeView extends StatelessWidget {
             children: [
               Text(
                 // buradaki null kontrolünü sen sonra istersen iyileştirirsin
-                "**** **** **** ${user?.id.substring(user!.id.length - 4) ?? '0000'}",
+                "**** **** **** ${user?.id.substring(user.id.length - 4) ?? '0000'}",
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.5),
                   fontSize: 16,
