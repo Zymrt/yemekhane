@@ -95,7 +95,9 @@ const handleLogin = async () => {
     const fallbackPath = user.value?.role === 'admin' ? '/admin' : '/menu'
     const target = redirectPath || fallbackPath
 
-    await navigateTo(target)
+    // Hard redirect yaparak sayfa tamamen yeniden yükleniyor
+    // Cookie'lerin düzgün okunması için navigateTo yerine bu kullanılıyor
+    window.location.href = target
   } catch (err) {
     console.error('Login Hatası:', err)
     error.value = 'Sunucuya bağlanılamadı veya hata oluştu.'

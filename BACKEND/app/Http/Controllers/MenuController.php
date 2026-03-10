@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Menu;
-use App\Models\Log; // 🌟 LOG MODELİ EKLENDİ
+use App\Models\Log as AppLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use MongoDB\BSON\ObjectId;
 
 class MenuController extends Controller
@@ -28,7 +30,7 @@ class MenuController extends Controller
         );
 
         // 📝 LOG TUTMA: Menü Ekleme/Güncelleme
-        Log::create([
+        AppLog::create([
             'user_id' => $request->user()->id ?? null,
             'action' => 'Menü İşlemi',
             'description' => "{$validated['date']} tarihi için menü oluşturuldu veya güncellendi.",
@@ -36,6 +38,14 @@ class MenuController extends Controller
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent'),
         ]);
+
+        // 🔌 SOCKET: Bağlı tüm kullanıcılara menü güncellemesi bildir
+        try {
+            $socketUrl = env('SOCKET_SERVER_URL', 'http://localhost:3001');
+            Http::post("{$socketUrl}/api/menu-updated");
+        } catch (\Exception $e) {
+            Log::warning('Socket menü bildirimi hatası: ' . $e->getMessage());
+        }
 
         return response()->json(['message' => 'Menü başarıyla kaydedildi veya güncellendi.']);
     }
@@ -73,7 +83,7 @@ class MenuController extends Controller
         $menu->delete();
 
         // 📝 LOG TUTMA: Menü Silme
-        Log::create([
+        AppLog::create([
             'user_id' => $request->user()->id ?? null,
             'action' => 'Menü Silindi',
             'description' => "{$menuDate} tarihli menü silindi.",
@@ -113,7 +123,7 @@ class MenuController extends Controller
         $menu->save();
 
         // 📝 LOG TUTMA: Menü Güncelleme
-        Log::create([
+        AppLog::create([
             'user_id' => $request->user()->id ?? null,
             'action' => 'Menü Düzenlendi',
             'description' => "{$validated['date']} tarihli menü içeriği güncellendi.",
@@ -121,6 +131,14 @@ class MenuController extends Controller
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent'),
         ]);
+
+        // 🔌 SOCKET: Bağlı tüm kullanıcılara menü güncellemesi bildir
+        try {
+            $socketUrl = env('SOCKET_SERVER_URL', 'http://localhost:3001');
+            Http::post("{$socketUrl}/api/menu-updated");
+        } catch (\Exception $e) {
+            Log::warning('Socket menü güncelleme bildirimi hatası: ' . $e->getMessage());
+        }
 
         return response()->json(['message' => 'Menü başarıyla güncellendi.']);
     }

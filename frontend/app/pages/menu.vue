@@ -314,6 +314,7 @@ import { io } from 'socket.io-client'
 
 await protectUserPage()
 
+const config = useRuntimeConfig()
 const { user } = useAuth()
 const { data: reviewData, pending, error, refresh } = await useFetch('/api/reviews/today')
 
@@ -347,7 +348,7 @@ const mealPrice = computed(() => {
   if (reviewData.value?.menu?.price) {
     return parseFloat(reviewData.value.menu.price);
   }
-  return parseFloat(import.meta.env.VITE_MEAL_PRICE || 50.0); 
+  return config.public.mealPrice || 50.0;
 })
 
 async function purchaseMenu() {
@@ -399,7 +400,8 @@ onMounted(async () => {
   await fetchAnnouncements()
 
   // 2. 🔥 SOCKET BAĞLANTISI
-  const socket = io('http://localhost:3001') 
+  const socketUrl = config.public.socketUrl || 'http://localhost:3001'
+  const socket = io(socketUrl)
 
   // A) Doluluk Dinle
   socket.on('occupancy_update', (data) => {

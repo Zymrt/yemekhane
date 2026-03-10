@@ -486,7 +486,8 @@ class AdminController extends Controller
         ]);
 
         try {
-            Http::post('http://localhost:3001/api/announcement-posted', [
+            $socketUrl = env('SOCKET_SERVER_URL', 'http://localhost:3001');
+            Http::post("{$socketUrl}/api/announcement-posted", [
                 'title' => $request->title
             ]);
         } catch (\Exception $e) {
@@ -507,7 +508,8 @@ class AdminController extends Controller
         $announcement->delete();
 
         try {
-            Http::post('http://localhost:3001/api/announcement-deleted', [
+            $socketUrl = env('SOCKET_SERVER_URL', 'http://localhost:3001');
+            Http::post("{$socketUrl}/api/announcement-deleted", [
                 'id' => $id
             ]);
         } catch (\Exception $e) {

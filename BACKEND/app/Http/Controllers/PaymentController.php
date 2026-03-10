@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Transaction; // Transaction modelini import etmeyi unutmayın
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -53,9 +55,19 @@ class PaymentController extends Controller
                 ]);
             }
 
-            // Simülasyon başarılı, frontend'e onay ver.
+            // Simülasyon başarılı, socket'e bakiye güncelleme bildirimi gönder
+            try {
+                $socketUrl = env('SOCKET_SERVER_URL', 'http://localhost:3001');
+                Http::post("{$socketUrl}/api/balance-updated", [
+                    'user_id'     => (string)($freshUser->_id ?? $freshUser->id),
+                    'new_balance' => $freshUser->balance,
+                ]);
+            } catch (\Exception $socketEx) {
+                Log::warning('Socket bakiye bildirimi hatası: ' . $socketEx->getMessage());
+            }
+
             return response()->json([
-                'message' => 'Ödeme simülasyonu başarılı.',
+                'message'     => 'Ödeme simülasyonu başarılı.',
                 'new_balance' => $freshUser->balance,
             ], Response::HTTP_OK);
 
