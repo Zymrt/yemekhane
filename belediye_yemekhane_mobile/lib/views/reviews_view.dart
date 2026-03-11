@@ -6,9 +6,6 @@ import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/auth_controller.dart';
 
-import 'transactions_view.dart';
-import 'reviews_view.dart';
-
 class HomeView extends StatelessWidget {
   HomeView({super.key});
 
